@@ -152,7 +152,7 @@ with tab2:
     if st.button("Train Model", use_container_width=True):  # Adding a button to trigger model training
         with st.spinner("Training model..."):  # Displaying a status message while training the model
             st.write("Ingesting data...")  # Displaying a message for data ingestion
-            ingest_data(st.session_state.master_data_path, st.session_state.postgres_username, st.session_state.postgres_password, st.session_state.postgres_host, st.session_state.postgres_port, st.session_state.postgres_database)  # Calling the ingest_data function
+            ingest_data(st.session_state.master_data_path, st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db,"tweet_data")  # Calling the ingest_data function
             st.write("Data Ingested Successfully! ✅")  # Displaying a success message
             
             st.write("Preprocessing data...")  # Displaying a message for data preprocessing

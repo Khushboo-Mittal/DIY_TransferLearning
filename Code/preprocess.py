@@ -49,33 +49,9 @@ def preprocess_mongo_data(data):
     data['sentiment'] = le.fit_transform(data['sentiment']) # Encode sentiment column
     return data
 
-
-def load_and_preprocess_data (mongo_host, mongo_port, mongo_db):
-
-    # Connect to MongoDB
-    client = MongoClient(f'mongodb://{mongo_host}:{mongo_port}')
-    db = client[mongo_db]
-    collection = db['Twitter_training']
-
-    # Load MongoDB data into a DataFrame
-    data_mongodb = pd.DataFrame(list(collection.find()))
-
-    # If needed, you can drop the MongoDB's default "_id" column
-    data_mongodb.drop('_id', axis=1, inplace=True)  # Uncomment if you want to remove the "_id" column
     
-    # Preprocess data
-    data_mongo_processed = preprocess_mongo_data(data_mongodb) # Preprocess PostgreSQL data
-    return data_mongo_processed
-
-
-import pandas as pd
-from pymongo import MongoClient
-
-def preprocess_data(data):
-    data
-    
-def load_and_preprocess_data(mongdb_host, mongodb_port, mongodb_db, mongodb_collection):
-    client = MongoClient(host=mongdb_host, port=mongodb_port)
+def load_and_preprocess_data(mongodb_host, mongodb_port, mongodb_db):
+    client = MongoClient(host=mongodb_host, port=mongodb_port)
     db = client[mongodb_db]
     collection = db["tweet_data"]
 
@@ -86,7 +62,7 @@ def load_and_preprocess_data(mongdb_host, mongodb_port, mongodb_db, mongodb_coll
     # Drop the MongoDB ObjectId column (optional)
     df.drop(columns=["_id"], inplace=True)
     
-    data_preprocessed = preprocess_data(df)
+    data_preprocessed = preprocess_mongo_data(df)
     
     data_dict = data_preprocessed.to_dict(orient="records")
     

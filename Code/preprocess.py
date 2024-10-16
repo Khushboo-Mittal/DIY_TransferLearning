@@ -67,3 +67,30 @@ def load_and_preprocess_data (mongo_host, mongo_port, mongo_db):
     data_mongo_processed = preprocess_mongo_data(data_mongodb) # Preprocess PostgreSQL data
     return data_mongo_processed
 
+
+import pandas as pd
+from pymongo import MongoClient
+
+def preprocess_data(data):
+    data
+    
+def load_and_preprocess_data(mongdb_host, mongodb_port, mongodb_db, mongodb_collection):
+    client = MongoClient(host=mongdb_host, port=mongodb_port)
+    db = client[mongodb_db]
+    collection = db["tweet_data"]
+
+    # Fetch data from MongoDB and convert it to a pandas DataFrame
+    data = list(collection.find())
+    df = pd.DataFrame(data)
+
+    # Drop the MongoDB ObjectId column (optional)
+    df.drop(columns=["_id"], inplace=True)
+    
+    data_preprocessed = preprocess_data(df)
+    
+    data_dict = data_preprocessed.to_dict(orient="records")
+    
+    new_collection = db["preprocessed_tweet_data"]
+    
+    # Insert the data into the MongoDB collection
+    new_collection.insert_many(data_dict)

@@ -21,16 +21,18 @@
             # Pandas 2.2.2
 
 import pandas as pd # Importing pandas for data manipulation
-import db_utils # Importing utility functions for database operations
+import csv
+from pymongo import MongoClient
 
-def ingest_data(data_path, mongo_host, mongo_port, mongo_database, collection_name):
-    data = pd.read_csv(data_path)  # Read data from CSV file
+def ingest_data(data_path, mongodb_host, mongodb_port, mongodb_db):
 
-    # Select relevant columns for MongoDB insertion
-    mongo_data = data[['Tweet ID','entity','sentiment','Tweet content']]
-    
-    # Connect to MongoDB (without username or password)
-    mongo_db = db_utils.connect_to_mongodb(mongo_host, mongo_port, mongo_database)
-    
-    # Insert data into MongoDB
-    db_utils.insert_data_to_mongodb(mongo_data, collection_name, mongo_db)
+    # Connect to MongoDB
+    client = MongoClient(host=mongodb_host, port=mongodb_port)
+    db = client[mongodb_db]
+    collection = db["tweet_data"]
+
+    # Read and insert CSV data
+    with open(data_path, mode="r") as file:
+        reader = csv.DictReader(file)
+        data = list(reader)
+        collection.insert_many(data)

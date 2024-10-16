@@ -20,65 +20,53 @@
             # Python 3.11.5
             # Pandas 2.2.2
             # Scikit-learn 1.5.0
+import numpy as np
+import pandas as pd     # Importing pandas for data manipulation
+from sqlalchemy import create_engine
+from sklearn.preprocessing import LabelEncoder  # Importing tools for data preprocessing
+import spacy
+from pymongo import MongoClient
 
-# import pandas as pd     # Importing pandas for data manipulation
-# from sqlalchemy import create_engine
-# from sklearn.preprocessing import StandardScaler, LabelEncoder  # Importing tools for data preprocessing
+def preprocess_mongo_data(data):
+    data.drop_duplicates(inplace=True)
+    data.dropna(inplace=True)
+    # Load spaCy model
+    nlp = spacy.load("en_core_web_sm") 
 
-# def preprocess_postgres_data(data):
-#     # Separate transaction_id
-#     transaction_id = data['transaction_id']
-#     # Define columns to be scaled, excluding 'transaction_id'
+    def preprocess(text):
+        doc = nlp(text)
+        filtered_tokens = []
+        for token in doc:
+            # Skip stopwords and punctuation
+            if not token.is_stop and not token.is_punct:
+                filtered_tokens.append(token.lemma_)  # Lemmatize the token
+                
+        return " ".join(filtered_tokens)
     
-#     #Convert to datetime format
-#     data['transaction_date'] = pd.to_datetime(data['transaction_date'],format='%d-%m-%Y')
-
-#     # Extract components
-#     data['transaction_year'] = data['transaction_date'].dt.year
-#     data['transaction_month'] = data['transaction_date'].dt.month
-#     data['transaction_day'] = data['transaction_date'].dt.day
-
-#     # Drop the transaction_date column
-#     data = data.drop('transaction_date', axis=1)
-     
-#     numerical_cols = [
-#         'transaction_amount', 'cardholder_age', 'account_balance', 'calander_income','transaction_year','transaction_month','transaction_day'
-#     ]
-
-#     categorical_cols = [
-#         'merchant_category', 'card_type', 'transaction_location', 'cardholder_gender', 'transaction_description'
-#     ]
-
-#     # Create a temporary DataFrame for scaling
-#     temp_data = data[numerical_cols].copy()
-#     temp_data.columns = temp_data.columns.str.strip()
-
-#     scaler = StandardScaler() # Initialize the StandardScaler
-#     temp_data = pd.DataFrame(scaler.fit_transform(temp_data)) # Scale numerical columns
-
-#     # Encode categorical columns
-#     encoder = LabelEncoder() # Initialize the LabelEncoder
-#     for col in categorical_cols:
-#         data[col] = encoder.fit_transform(data[col]) # Encode categorical columns
-
-#     # Rejoin transaction_id and scaled numerical columns
-#     data = data.drop(columns=numerical_cols) # Drop original numerical columns
-#     data = pd.concat([data, temp_data], axis=1) # Concatenate scaled numerical columns back
-#     data['transaction_id'] = transaction_id # Reassign transaction_id
-
-#     return data
+    data['Preprocessed Text'] = data['tweet_content'].apply(preprocess) 
+    # Encode categorical columns
+    le = LabelEncoder() # Initialize the LabelEncoder
+    data['sentiment'] = le.fit_transform(data['sentiment']) # Encode sentiment column
+    return data
 
 
-# def load_and_preprocess_data(postgres_username, postgres_password, postgres_host, postgres_port, postgres_database):
+def load_and_preprocess_data (mongo_host, mongo_port, mongo_db):
 
-#     # Load data from PostgreSQL
-#     postgres_engine = create_engine(f'postgresql://{postgres_username}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_database}')
-#     data_postgres = pd.read_sql_table('transaction_data', postgres_engine) # Load PostgreSQL data
+    # Connect to MongoDB
+    client = MongoClient(f'mongodb://{mongo_host}:{mongo_port}')
+    db = client[mongo_db]
+    collection = db['Twitter_training']
 
-#     # Preprocess data
-#     data_postgres_processed = preprocess_postgres_data(data_postgres) # Preprocess PostgreSQL data
+    # Load MongoDB data into a DataFrame
+    data_mongodb = pd.DataFrame(list(collection.find()))
 
-#     return data_postgres_processed
+    # If needed, you can drop the MongoDB's default "_id" column
+    data_mongodb.drop('_id', axis=1, inplace=True)  # Uncomment if you want to remove the "_id" column
+    
+    # Preprocess data
+    data_mongo_processed = preprocess_mongo_data(data_mongodb) # Preprocess PostgreSQL data
+    return data_mongo_processed
+
 
 import pandas as pd
 from pymongo import MongoClient

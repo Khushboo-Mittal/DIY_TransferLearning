@@ -50,8 +50,8 @@ def preprocess_mongo_data(data):
     return data
 
     
-def load_and_preprocess_data(mongdb_host, mongodb_port, mongodb_db):
-    client = MongoClient(host=mongdb_host, port=mongodb_port)
+def load_and_preprocess_data(mong0db_host, mongodb_port, mongodb_db):
+    client = MongoClient(host=mong0db_host, port=mongodb_port)
     db = client[mongodb_db]
     collection = db["tweet_data"]
 

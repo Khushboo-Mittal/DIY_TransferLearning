@@ -23,16 +23,14 @@
 import pandas as pd # Importing pandas for data manipulation
 import db_utils # Importing utility functions for database operations
 
-def ingest_data(data_path, postgres_username, postgres_password, postgres_host, postgres_port, postgres_database):
-    
-    data = pd.read_csv(data_path) # Read data from CSV file
+def ingest_data(data_path, mongo_host, mongo_port, mongo_database, collection_name):
+    data = pd.read_csv(data_path)  # Read data from CSV file
 
-    postgres_data = data[['transaction_id', 'transaction_date', 'transaction_amount', 'merchant_category', 'card_type', 'transaction_location',
-                          'cardholder_age', 'cardholder_gender', 'transaction_description', 'account_balance', 'calander_income']]
+    # Select relevant columns for MongoDB insertion
+    mongo_data = data[['Tweet ID','entity','sentiment','Tweet content']]
     
+    # Connect to MongoDB (without username or password)
+    mongo_db = db_utils.connect_to_mongodb(mongo_host, mongo_port, mongo_database)
     
-    # Connect to PostgreSQL
-    postgres_engine = db_utils.connect_postgresql(postgres_username, postgres_password, postgres_host, postgres_port, postgres_database)
-    
-    # Insert data into PostgreSQL
-    db_utils.insert_data_to_postgresql(postgres_data, 'transaction_data', postgres_engine)
+    # Insert data into MongoDB
+    db_utils.insert_data_to_mongodb(mongo_data, collection_name, mongo_db)

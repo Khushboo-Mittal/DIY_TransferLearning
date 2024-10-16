@@ -20,37 +20,21 @@
             # Python 3.11.5   
             # SQLAlchemy 2.0.31
 
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Float, DateTime
+from pymongo import MongoClient
 
-def connect_postgresql(username, password, host, port, database):
-    # Function to connect to PostgreSQL database using the provided configuration
+def connect_to_mongodb(host, port, db_name):
+    # Function to connect to MongoDB using the provided configuration
+    client = MongoClient(host, port)  
+    db = client[db_name]
+    return db  # Return MongoDB database object
+
+def insert_data_to_mongodb(data, collection_name, db):
+    # Function to insert data into MongoDB collection
+    collection = db[collection_name]
     
-    engine = create_engine(f"postgresql://{username}:{password}@{host}:{port}/{database}")
-    return engine  # Return SQLAlchemy engine for PostgreSQL connection
-
-
-def create_postgresql_table(engine):
-    # Function to create a PostgreSQL table for customer data
-    metadata = MetaData()  # Metadata object to hold information about the table
-    transaction_data = Table('transaction_data', metadata,
-                          Column('transaction_id', Integer, primary_key=True),  # Primary key column
-                          Column('transaction_date', DateTime), #Date of Transaction column
-                          Column('transaction_amount', Float),  # Transaction column
-                          Column('merchant_category', String),  # Merchant Category column
-                          Column('card_type', String),  # Card Type column
-                          Column('transaction_location', String),  # Transaction Location column
-                          Column('cardholder_age', Integer),  # Cardholder Age column
-                          Column('cardholder_gender', String),  # Cardholder Gender column
-                          Column('transaction_description', String),  # Transaction Description column
-                          Column('account_balance', Float),  # Account Balance column
-                          Column('calander_income', Float))  # Cardholder Income column
-    metadata.create_all(engine)  # Create the table in the database
-
-
-def insert_data_to_postgresql(data, table_name, engine):
-    # Function to insert data into a PostgreSQL table
+    # Convert DataFrame to dictionary format for MongoDB
+    data_dict = data.to_dict(orient='records')
     
-    # Create the table if not exists
-    create_postgresql_table(engine)
-    
-    data.to_sql(table_name, engine, if_exists='replace', index=False)  # Insert data into the specified table
+    # Insert data into MongoDB collection
+    collection.insert_many(data_dict)
+

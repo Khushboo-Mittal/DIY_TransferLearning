@@ -21,18 +21,18 @@
             # Pandas 2.2.2
 
 import pandas as pd # Importing pandas for data manipulation
-import db_utils # Importing utility functions for database operations
+import csv
+from pymongo import MongoClient
 
-def ingest_data(data_path, postgres_username, postgres_password, postgres_host, postgres_port, postgres_database):
-    
-    data = pd.read_csv(data_path) # Read data from CSV file
+def ingest_data(data_path, mongodb_host, mongodb_port, mongodb_db):
 
-    postgres_data = data[['transaction_id', 'transaction_date', 'transaction_amount', 'merchant_category', 'card_type', 'transaction_location',
-                          'cardholder_age', 'cardholder_gender', 'transaction_description', 'account_balance', 'calander_income']]
-    
-    
-    # Connect to PostgreSQL
-    postgres_engine = db_utils.connect_postgresql(postgres_username, postgres_password, postgres_host, postgres_port, postgres_database)
-    
-    # Insert data into PostgreSQL
-    db_utils.insert_data_to_postgresql(postgres_data, 'transaction_data', postgres_engine)
+    # Connect to MongoDB
+    client = MongoClient(host=mongodb_host, port=mongodb_port)
+    db = client[mongodb_db]
+    collection = db["tweet_data"]
+
+    # Read and insert CSV data
+    with open(data_path, mode="r") as file:
+        reader = csv.DictReader(file)
+        data = list(reader)
+        collection.insert_many(data)

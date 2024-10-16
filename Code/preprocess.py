@@ -21,61 +21,88 @@
             # Pandas 2.2.2
             # Scikit-learn 1.5.0
 
-import pandas as pd     # Importing pandas for data manipulation
-from sqlalchemy import create_engine
-from sklearn.preprocessing import StandardScaler, LabelEncoder  # Importing tools for data preprocessing
+# import pandas as pd     # Importing pandas for data manipulation
+# from sqlalchemy import create_engine
+# from sklearn.preprocessing import StandardScaler, LabelEncoder  # Importing tools for data preprocessing
 
-def preprocess_postgres_data(data):
-    # Separate transaction_id
-    transaction_id = data['transaction_id']
-    # Define columns to be scaled, excluding 'transaction_id'
+# def preprocess_postgres_data(data):
+#     # Separate transaction_id
+#     transaction_id = data['transaction_id']
+#     # Define columns to be scaled, excluding 'transaction_id'
     
-    #Convert to datetime format
-    data['transaction_date'] = pd.to_datetime(data['transaction_date'],format='%d-%m-%Y')
+#     #Convert to datetime format
+#     data['transaction_date'] = pd.to_datetime(data['transaction_date'],format='%d-%m-%Y')
 
-    # Extract components
-    data['transaction_year'] = data['transaction_date'].dt.year
-    data['transaction_month'] = data['transaction_date'].dt.month
-    data['transaction_day'] = data['transaction_date'].dt.day
+#     # Extract components
+#     data['transaction_year'] = data['transaction_date'].dt.year
+#     data['transaction_month'] = data['transaction_date'].dt.month
+#     data['transaction_day'] = data['transaction_date'].dt.day
 
-    # Drop the transaction_date column
-    data = data.drop('transaction_date', axis=1)
+#     # Drop the transaction_date column
+#     data = data.drop('transaction_date', axis=1)
      
-    numerical_cols = [
-        'transaction_amount', 'cardholder_age', 'account_balance', 'calander_income','transaction_year','transaction_month','transaction_day'
-    ]
+#     numerical_cols = [
+#         'transaction_amount', 'cardholder_age', 'account_balance', 'calander_income','transaction_year','transaction_month','transaction_day'
+#     ]
 
-    categorical_cols = [
-        'merchant_category', 'card_type', 'transaction_location', 'cardholder_gender', 'transaction_description'
-    ]
+#     categorical_cols = [
+#         'merchant_category', 'card_type', 'transaction_location', 'cardholder_gender', 'transaction_description'
+#     ]
 
-    # Create a temporary DataFrame for scaling
-    temp_data = data[numerical_cols].copy()
-    temp_data.columns = temp_data.columns.str.strip()
+#     # Create a temporary DataFrame for scaling
+#     temp_data = data[numerical_cols].copy()
+#     temp_data.columns = temp_data.columns.str.strip()
 
-    scaler = StandardScaler() # Initialize the StandardScaler
-    temp_data = pd.DataFrame(scaler.fit_transform(temp_data)) # Scale numerical columns
+#     scaler = StandardScaler() # Initialize the StandardScaler
+#     temp_data = pd.DataFrame(scaler.fit_transform(temp_data)) # Scale numerical columns
 
-    # Encode categorical columns
-    encoder = LabelEncoder() # Initialize the LabelEncoder
-    for col in categorical_cols:
-        data[col] = encoder.fit_transform(data[col]) # Encode categorical columns
+#     # Encode categorical columns
+#     encoder = LabelEncoder() # Initialize the LabelEncoder
+#     for col in categorical_cols:
+#         data[col] = encoder.fit_transform(data[col]) # Encode categorical columns
 
-    # Rejoin transaction_id and scaled numerical columns
-    data = data.drop(columns=numerical_cols) # Drop original numerical columns
-    data = pd.concat([data, temp_data], axis=1) # Concatenate scaled numerical columns back
-    data['transaction_id'] = transaction_id # Reassign transaction_id
+#     # Rejoin transaction_id and scaled numerical columns
+#     data = data.drop(columns=numerical_cols) # Drop original numerical columns
+#     data = pd.concat([data, temp_data], axis=1) # Concatenate scaled numerical columns back
+#     data['transaction_id'] = transaction_id # Reassign transaction_id
 
-    return data
+#     return data
 
 
-def load_and_preprocess_data(postgres_username, postgres_password, postgres_host, postgres_port, postgres_database):
+# def load_and_preprocess_data(postgres_username, postgres_password, postgres_host, postgres_port, postgres_database):
 
-    # Load data from PostgreSQL
-    postgres_engine = create_engine(f'postgresql://{postgres_username}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_database}')
-    data_postgres = pd.read_sql_table('transaction_data', postgres_engine) # Load PostgreSQL data
+#     # Load data from PostgreSQL
+#     postgres_engine = create_engine(f'postgresql://{postgres_username}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_database}')
+#     data_postgres = pd.read_sql_table('transaction_data', postgres_engine) # Load PostgreSQL data
 
-    # Preprocess data
-    data_postgres_processed = preprocess_postgres_data(data_postgres) # Preprocess PostgreSQL data
+#     # Preprocess data
+#     data_postgres_processed = preprocess_postgres_data(data_postgres) # Preprocess PostgreSQL data
 
-    return data_postgres_processed
+#     return data_postgres_processed
+
+import pandas as pd
+from pymongo import MongoClient
+
+def preprocess_data(data):
+    data
+    
+def load_and_preprocess_data(mongdb_host, mongodb_port, mongodb_db, mongodb_collection):
+    client = MongoClient(host=mongdb_host, port=mongodb_port)
+    db = client[mongodb_db]
+    collection = db["tweet_data"]
+
+    # Fetch data from MongoDB and convert it to a pandas DataFrame
+    data = list(collection.find())
+    df = pd.DataFrame(data)
+
+    # Drop the MongoDB ObjectId column (optional)
+    df.drop(columns=["_id"], inplace=True)
+    
+    data_preprocessed = preprocess_data(df)
+    
+    data_dict = data_preprocessed.to_dict(orient="records")
+    
+    new_collection = db["preprocessed_tweet_data"]
+    
+    # Insert the data into the MongoDB collection
+    new_collection.insert_many(data_dict)

@@ -20,13 +20,7 @@ import joblib  # For saving models
 import pickle  # For loading data
 import streamlit as st  # Ensure Streamlit is imported
 from ultralytics import YOLO  # Ultralytics YOLOv8
-
-def load_data_from_mongodb(db, collection_name):
-    collection = db[collection_name]
-    data = collection.find_one()  # Retrieve the first document
-    if data and 'data' in data:
-        return pickle.loads(data['data'])  # Deserialize the pickled binary data
-    return None
+from db_utils import load_FaceMask_data_from_mongodb as load_data
 
 def preprocess_images(image_paths):
     images = []
@@ -40,13 +34,9 @@ def train_yolov8_model(mongodb_host, mongodb_port, mongodb_db, model_path):
     # Connect to the MongoDB database
     client = MongoClient(host=mongodb_host, port=mongodb_port)
     db = client[mongodb_db]
-
-    # Load the image paths and labels from MongoDB
-    image_paths = load_data_from_mongodb(db, 'image_paths')
-    labels = load_data_from_mongodb(db, 'labels')
-
+    X_train = load_data(db, 'x_train')
     # Preprocess the image dataset
-    X_train = preprocess_images(image_paths)
+    X_train = preprocess_images(X_train)
 
     # Load YOLOv8 model
     model = YOLO('yolov8n.pt')  # Pre-trained YOLOv8 nano model (smallest version)
@@ -62,7 +52,8 @@ def train_yolov8_model(mongodb_host, mongodb_port, mongodb_db, model_path):
     with open(f'{model_path}.pkl', 'wb') as f:
         pickle.dump(model_weights, f)
 
-    print('Model training completed successfully!')
+    accuracy = evaluate_yolov8_model(model,X_test, y_test)
+    return accuracy
 
 def evaluate_yolov8_model(model, X_test, y_test):
     predictions = []
@@ -78,41 +69,13 @@ def evaluate_yolov8_model(model, X_test, y_test):
     accuracy = accuracy_score(y_test, y_pred)
 
 
-        # Assuming you have y_test (true labels) and y_pred (predicted labels)
-    class_report = classification_report(y_test, y_pred, output_dict=True)
+    # Assuming you have y_test (true labels) and y_pred (predicted labels)
+    # class_report = classification_report(y_test, y_pred, output_dict=True)
 
     # Extracting precision, recall, and F1-score
-    precision = class_report['weighted avg']['precision']
-    recall = class_report['weighted avg']['recall']
-    f1_score = class_report['weighted avg']['f1-score']
+    # precision = class_report['weighted avg']['precision']
+    # recall = class_report['weighted avg']['recall']
+    # f1_score = class_report['weighted avg']['f1-score']
 
-    # Printing the results
-    print(f"Precision: {precision}")
-    print(f"Recall: {recall}")
-    print(f"F1-score: {f1_score}")
+    return accuracy
 
-    return accuracy,precision,f1_score
-
-def main(mongodb_host, mongodb_port, mongodb_db, model_path):
-    # Connect to MongoDB and load db reference
-    client = MongoClient(host=mongodb_host, port=mongodb_port)
-    db = client[mongodb_db]
-
-    # Train the YOLOv8 model
-    train_yolov8_model(mongodb_host, mongodb_port, mongodb_db, model_path)
-
-    # Load test data
-    X_test = preprocess_images(load_data_from_mongodb(db, 'test_image_paths'))
-    y_test = load_data_from_mongodb(db, 'test_labels')
-
-    # Load the saved YOLOv8 model
-    model = YOLO(model_path)
-
-    # Evaluate the model
-    accuracy, conf_matrix, class_report = evaluate_yolov8_model(model, X_test, y_test)
-
-    print(f'Accuracy: {accuracy}')
-    print(f'Confusion Matrix:\n{conf_matrix}')
-    print(f'Classification Report:\n{class_report}')
-
-    main(mongodb_host, mongodb_port, mongodb_db, model_path)

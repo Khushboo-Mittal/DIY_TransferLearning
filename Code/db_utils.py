@@ -1,7 +1,7 @@
 # META DATA - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
      # Developer details: 
-        # Name: Harshita and Prachi
+        # Name: Harshita
         # Role: Architects
     # Version:
         # Version: V 1.0 (20 September 2024)
@@ -45,4 +45,17 @@ def insert_data_to_mongodb(data, collection_name, db):
         # Insert each image path into the MongoDB collection
         for image_path in data:
             collection.insert_one({"image_path": image_path})
+            
+# Load image and annotation paths from MongoDB
+def load_FaceMask_data_from_mongodb(db, collection_name):
+    collection = db[collection_name]
+    image_paths, annotation_paths = [], []
+    
+    for document in collection.find():
+        if 'image_path' in document:
+            image_paths.append(document['image_path'])
+        if 'annotation_path' in document:
+            annotation_paths.append(document['annotation_path'])
+    
+    return image_paths, annotation_paths
 

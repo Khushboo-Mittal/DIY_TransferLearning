@@ -1,7 +1,7 @@
 # META DATA - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
     # Developer details: 
-        # Name: Harshita and Prachi
+        # Name: Harshita
         # Role: Architects
     # Version:
         # Version: V 1.0 (20 September 2024)

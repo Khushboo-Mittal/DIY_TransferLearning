@@ -62,7 +62,7 @@ if "facemask_data_path" not in st.session_state:
     st.session_state.facemask_data_path = "Data/Master/FaceMaskData/images"
     
 if "tweet_data_path" not in st.session_state:
-    st.session_state.tweet_data_path = "Data/Master/TwitterData/twitter_training.csv"
+    st.session_state.tweet_data_path = "Data/Master/TwitterData/twitter_data.csv"
     
 if "isolation_forest_path" not in st.session_state:
     st.session_state.isolation_forest_path = "isolation_forest_model.pkl"

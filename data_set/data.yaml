@@ -1,0 +1,8 @@
+names:
+- with_mask
+- without_mask
+- mask_weared_incorrect
+nc: 3
+test: /Users/tanishapriya/Desktop/Computer_Vision/data/test/images
+train: /Users/tanishapriya/Desktop/Computer_Vision/data/train/images
+val: /Users/tanishapriya/Desktop/Computer_Vision/data/val/images

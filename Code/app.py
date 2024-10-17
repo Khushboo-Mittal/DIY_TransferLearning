@@ -29,12 +29,13 @@ import datetime  # Used for setting default value in streamlit form
 # Importing the .py helper files
 from ingest import ingest_data  # Importing the ingest_data function from ingest.py
 from preprocess import load_and_preprocess_data  # Importing the load_and_preprocess_data function from preprocess.py
-from split import split_data  # Importing the split_data function from split.py
-from isolationForest import train_model as train_model_isolationForest # Importing the train_model function from model_training.py
-from oneClassSVM import train_model as train_model_oneClassSvm # Importing the train_model function from model_training.py
-from localOutlierFactor import train_model as train_model_localOutlierFactor 
+from split import split_data_and_store  # Importing the split_data function from split.py
+from nn import train_model_nn as train_model_nn # Importing the train_model function from model_training.py
+from cv import train_yolov8_model as train_model_cv # Importing the train_model function from model_training.py
+# from nlp import train_model as train_model_nlp 
 from model_eval import evaluate_model  # Importing the evaluate_model function from model_eval.py
 from model_predict import predict_output  # Importing the predict_output function from model_predict.py
+from db_utils import load_FaceMask_data_from_mongodb as load_data_from_mongodb
 
 
 # Setting the page configuration for the web app
@@ -64,14 +65,14 @@ if "facemask_data_path" not in st.session_state:
 if "tweet_data_path" not in st.session_state:
     st.session_state.tweet_data_path = "Data/Master/TwitterData/twitter_data.csv"
     
-if "isolation_forest_path" not in st.session_state:
-    st.session_state.isolation_forest_path = "isolation_forest_model.pkl"
+if "nn_model_path" not in st.session_state:
+    st.session_state.nn_model_path = "nn_model.pkl"
     
-if "local_outlier_factor_path" not in st.session_state:
-    st.session_state.local_outlier_factor_model_path = "local_outlier_factor_model.pkl"
+if "cv_model_path" not in st.session_state:
+    st.session_state.cv_model_path = "cv_model.pkl"
     
-if "oneclass_svm_path" not in st.session_state:
-    st.session_state.oneclass_svm_path = "oneclass_svm_model.pkl"
+if "nlp_model_path" not in st.session_state:
+    st.session_state.nlp_model_path = "nlp_model.pkl"
 
 # Creating tabs for the web app.
 tab1, tab2, tab3, tab4 = st.tabs(["Model Config","Model Training","Model Evaluation", "Model Prediction"])
@@ -107,9 +108,9 @@ with tab1:
             
             st.session_state.facemask_data_path = st.text_input("FaceMaskData Data Path", st.session_state.facemask_data_path)
             st.session_state.tweet_data_path = st.text_input("Tweets Data Path", st.session_state.tweet_data_path)
-            st.session_state.isolation_forest_path = st.text_input("Isolation Forest Model Path", st.session_state.isolation_forest_path)
-            st.session_state.local_outlier_factor_path = st.text_input("Local Outlier Factor Model Path", st.session_state.local_outlier_factor_model_path)
-            st.session_state.oneclass_svm_path = st.text_input("One-Class SVM Model Path", st.session_state.oneclass_svm_path)
+            st.session_state.nn_model_path = st.text_input("NN Model Path", st.session_state.nn_model_path)
+            st.session_state.cv_model_path = st.text_input("CV Model Path", st.session_state.cv_model_path)
+            st.session_state.nlp_model_path = st.text_input("NLP Model Path", st.session_state.nlp_model_path)
             
         if st.form_submit_button(label="Save Config", use_container_width=True):
             st.write("Configurations Saved Successfully! ✅")
@@ -139,27 +140,29 @@ with tab2:
                 st.write("Preprocessing data...")  # Displaying a message for data preprocessing
                 data_postgres_processed= load_and_preprocess_data(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db)  # Calling the load_and_preprocess_data function
                 st.write("Data Preprocessed Successfully! ✅")  # Displaying a success message
-            
-            st.write("Splitting data into train, test, validation, and super validation sets...")  # Displaying a message for data splitting
-            split_data(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, data_postgres_processed) # Calling the split_data function
-            st.write("Data Split Successfully! ✅")  # Displaying a success message
+                st.write("Splitting data into train, test, validation, and super validation sets...")  # Displaying a message for data splitting
+                split_data_and_store(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, data_postgres_processed) # Calling the split_data function
+                st.write("Data Split Successfully! ✅")  # Displaying a success message
+            elif collection_name=="facemask_data":
+                data = load_data_from_mongodb(st.session_state.mongodb_db, collection_name)
+                st.write("Splitting data into train, test, validation, and super validation sets...")  # Displaying a message for data splitting
+                split_data_and_store(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, data) # Calling the split_data function
+                st.write("Data Split Successfully! ✅")  # Displaying a success message
             
             st.write("Training model...")  # Displaying a message for model training
             
             # Choosing the model to train based on the user's selection
-            if selected_model == "IsolationForest":
+            if selected_model == "NN":
                 # Calling the train_model function and storing the training accuracy and best hyperparameters
-                silhouette_avg, best_params = train_model_isolationForest(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.isolation_forest_path)
-            elif selected_model == "LocalOutlier factor":
-                silhouette_avg, best_params = train_model_localOutlierFactor(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.local_outlier_factor_path)
-            elif selected_model == "One-class SVM":
-                silhouette_avg, best_params = train_model_oneClassSvm(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.oneclass_svm_path)
+                accuracy = train_model_nn(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.nn_model_path)
+            elif selected_model == "CV":
+                accuracy = train_model_cv(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.cv_model_path)
+            # elif selected_model == "NLP":
+            #     silhouette_avg, best_params = train_model_nlp(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.oneclass_svm_path)
             st.write("Model Trained Successfully! ✅")  # Displaying a success message
         
         # Displaying the training accuracy
-        st.success(f"{selected_model} Model Successfully trained with average silhouette score: {silhouette_avg:.5f}")
-        st.write(f"Best Hyperparameters")
-        st.text(best_params)
+        st.success(f"{selected_model} Model Successfully trained with average silhouette score: {accuracy:.5f}")
 
 # Tab for Model Evaluation
 with tab3:
@@ -167,133 +170,149 @@ with tab3:
     st.write("This is where you can see the current metrics of the trained models")
     st.divider()
     
-    # Displaying the metrics for the Bagging Model
-    st.markdown("<h3 style='text-align: center; color: black;'>Isolation Forest Model</h3>", unsafe_allow_html=True)
+    # Displaying the metrics for the NN Model
+    st.markdown("<h3 style='text-align: center; color: black;'>NN Model</h3>", unsafe_allow_html=True)
     st.divider()
     
     # Get the model test, validation, and super validation metrics
-    isolation_test_silhouette_avg, isolation_test_db_index, isolation_test_ch_index, isolation_val_silhouette_avg, isolation_val_db_index, isolation_val_ch_index, isolation_superval_silhouette_avg, isolation_superval_db_index, isolation_superval_ch_index = evaluate_model(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.isolation_forest_path)
+    nn_test_accuracy, nn_test_prec, nn_test_recall, nn_test_f1, nn_val_accuracy, nn_val_prec, nn_val_recall, nn_val_f1, nn_superval_accuracy, nn_superval_prec, nn_superval_recall, nn_superval_f1 = evaluate_model(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.nn_model_path)
     
     # Display model metrics in three columns
-    isolation_col1,isolation_col2, isolation_col3 = st.columns(3)
+    nn_col1,nn_col2, nn_col3 = st.columns(3)
     
     # Helper function to center text vertically at the top using markdown
     def markdown_top_center(text):
         return f'<div style="display: flex; justify-content: center; align-items: flex-start; height: 100%;">{text}</div>'
 
-    with isolation_col1:
+    with nn_col1:
         # Displaying metrics for test, validation, and super validation sets
         st.markdown(markdown_top_center("Test Metrics:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(f"Silhouette avg: {isolation_test_silhouette_avg:.5f}"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(f"Accracy: {nn_test_accuracy:.5f}"), unsafe_allow_html=True)
         st.write(" ")
-        st.markdown(markdown_top_center("DB index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(isolation_test_db_index), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("CH index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(isolation_test_ch_index), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(nn_test_prec), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(nn_test_recall), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(nn_test_f1), unsafe_allow_html=True)
 
-    with isolation_col2:
+    with nn_col2:
         st.markdown(markdown_top_center("Validation Metrics:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(f"Silhouette avg: {isolation_val_silhouette_avg:.5f}"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(f"Accuracy: {nn_val_accuracy:.5f}"), unsafe_allow_html=True)
         st.write(" ")
-        st.markdown(markdown_top_center("DB index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(isolation_val_db_index), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("CH index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(isolation_val_ch_index), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(nn_val_prec), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(nn_val_recall), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(nn_val_f1), unsafe_allow_html=True)
 
-    with isolation_col3:
+    with nn_col3:
         st.markdown(markdown_top_center("Super Validation Metrics:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(f"Silhouette avg: {isolation_superval_silhouette_avg:.5f}"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(f"Accuracy: {nn_superval_accuracy:.5f}"), unsafe_allow_html=True)
         st.write(" ")
-        st.markdown(markdown_top_center("DB index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(isolation_superval_db_index), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("CH index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(isolation_superval_ch_index), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(nn_superval_prec), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(nn_superval_recall), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(nn_superval_f1), unsafe_allow_html=True)
         
     st.divider()
     
-    # Displaying the metrics for the Local Outlier Factor Model
-    st.markdown("<h3 style='text-align: center; color: black;'>Local Outlier Factor Model</h3>", unsafe_allow_html=True)
+    # Displaying the metrics for the CV Model
+    st.markdown("<h3 style='text-align: center; color: black;'>CV Model</h3>", unsafe_allow_html=True)
     st.divider()
 
-    # Get the model test, validation, and super validation metrics for LOF
-    lof_test_silhouette_avg, lof_test_db_index, lof_test_ch_index, lof_val_silhouette_avg, lof_val_db_index, lof_val_ch_index, lof_superval_silhouette_avg, lof_superval_db_index, lof_superval_ch_index = evaluate_model(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.local_outlier_factor_path)
-
+    # Get the model test, validation, and super validation metrics for CV
+    cv_test_accuracy, cv_test_prec, cv_test_recall, cv_test_f1, cv_val_accuracy, cv_val_prec, cv_val_recall, cv_val_f1, cv_superval_accuracy, cv_superval_prec, cv_superval_recall, cv_superval_f1 = evaluate_model(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.cv_model_path)
     # Display model metrics in three columns
-    lof_col1, lof_col2, lof_col3 = st.columns(3)
-
-    # # Helper function to center text vertically at the top using markdown
-    # def markdn f'<div style="display: flex; justify-content: center; align-items: flex-start; height: 100%;">{text}</div>'
-
+    cv_col1, cv_col2, cv_col3 = st.columns(3)
 
     # Display LOF model metrics using the same helper function to center text vertically at the top
-    with lof_col1:
+    with cv_col1:
+        # Displaying metrics for test, validation, and super validation sets
         st.markdown(markdown_top_center("Test Metrics:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(f"Silhouette avg: {lof_test_silhouette_avg:.5f}"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(f"Accracy: {cv_test_accuracy:.5f}"), unsafe_allow_html=True)
         st.write(" ")
-        st.markdown(markdown_top_center("DB index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(lof_test_db_index), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("CH index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(lof_test_ch_index), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(cv_test_prec), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(cv_test_recall), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(cv_test_f1), unsafe_allow_html=True)
 
-    with lof_col2:
+    with cv_col2:
         st.markdown(markdown_top_center("Validation Metrics:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(f"Silhouette avg: {lof_val_silhouette_avg:.5f}"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(f"Accuracy: {cv_val_accuracy:.5f}"), unsafe_allow_html=True)
         st.write(" ")
-        st.markdown(markdown_top_center("DB index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(lof_val_db_index), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("CH index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(lof_val_ch_index), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(cv_val_prec), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(cv_val_recall), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(cv_val_f1), unsafe_allow_html=True)
 
-    with lof_col3:
+    with cv_col3:
         st.markdown(markdown_top_center("Super Validation Metrics:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(f"Silhouette avg: {lof_superval_silhouette_avg:.5f}"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(f"Accuracy: {cv_superval_accuracy:.5f}"), unsafe_allow_html=True)
         st.write(" ")
-        st.markdown(markdown_top_center("DB index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(lof_superval_db_index), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("CH index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(lof_superval_ch_index), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(cv_superval_prec), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(cv_superval_recall), unsafe_allow_html=True)
+        st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
+        st.markdown(markdown_top_center(cv_superval_f1), unsafe_allow_html=True)
+        
 
     st.divider()
 
 
         
-    # Displaying the metrics for the One-Class SVM Model
-    st.markdown("<h3 style='text-align: center; color: black;'>One-Class SVM Model</h3>", unsafe_allow_html=True)
-    st.divider()
+    # # Displaying the metrics for the NLP Model
+    # st.markdown("<h3 style='text-align: center; color: black;'>NLP Model</h3>", unsafe_allow_html=True)
+    # st.divider()
 
-    # Get the model test, validation, and super validation metrics for One-Class SVM
-    oneclass_svm_test_silhouette_avg, oneclass_svm_test_db_index, oneclass_svm_test_ch_index, oneclass_svm_val_silhouette_avg, oneclass_svm_val_db_index, oneclass_svm_val_ch_index, oneclass_svm_superval_silhouette_avg, oneclass_svm_superval_db_index, oneclass_svm_superval_ch_index = evaluate_model(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.oneclass_svm_path)
+    # # Get the model test, validation, and super validation metrics for NLP
+    # nlp_test_accuracy, nlp_test_prec, nlp_test_recall, nlp_test_f1, nlp_val_accuracy, nlp_val_prec, nlp_val_recall, nlp_val_f1, nlp_superval_accuracy, nlp_superval_prec, nlp_superval_recall, nlp_superval_f1 = evaluate_model(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.nlp_model_path)
     
-    # Display model metrics in three columns for One-Class SVM
-    oneclass_svm_col1, oneclass_svm_col2, oneclass_svm_col3 = st.columns(3)
+    # # Display model metrics in three columns for NLP
+    # nlp_col1, nlp_col2, nlp_col3 = st.columns(3)
     
-    with oneclass_svm_col1:
-        # Displaying metrics for test, validation, and super validation sets
-        st.markdown(markdown_top_center("Test Metrics:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(f"Silhouette avg: {oneclass_svm_test_silhouette_avg:.5f}"), unsafe_allow_html=True)
-        st.write(" ")
-        st.markdown(markdown_top_center("DB index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(oneclass_svm_test_db_index), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("CH index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(oneclass_svm_test_ch_index), unsafe_allow_html=True)
+    # with nlp_col1:
+    #     # Displaying metrics for test, validation, and super validation sets
+    #     st.markdown(markdown_top_center("Test Metrics:"), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center(f"Accracy: {nlp_test_accuracy:.5f}"), unsafe_allow_html=True)
+    #     st.write(" ")
+    #     st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center(nlp_test_prec), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center(nlp_test_recall), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center(nlp_test_f1), unsafe_allow_html=True)
 
-    with oneclass_svm_col2:
-        st.markdown(markdown_top_center("Validation Metrics:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(f"Silhouette avg: {oneclass_svm_val_silhouette_avg:.5f}"), unsafe_allow_html=True)
-        st.write(" ")
-        st.markdown(markdown_top_center("DB index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(oneclass_svm_val_db_index), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("CH index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(oneclass_svm_val_ch_index), unsafe_allow_html=True)
+    # with nlp_col2:
+    #     st.markdown(markdown_top_center("Validation Metrics:"), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center(f"Accuracy: {nlp_val_accuracy:.5f}"), unsafe_allow_html=True)
+    #     st.write(" ")
+    #     st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center(nlp_val_prec), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center(nlp_val_recall), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center(nlp_val_f1), unsafe_allow_html=True)
 
-    with oneclass_svm_col3:
-        st.markdown(markdown_top_center("Super Validation Metrics:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(f"Silhouette avg: {oneclass_svm_superval_silhouette_avg:.5f}"), unsafe_allow_html=True)
-        st.write(" ")
-        st.markdown(markdown_top_center("DB index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(oneclass_svm_superval_db_index), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("CH index:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(oneclass_svm_superval_ch_index), unsafe_allow_html=True)
+    # with nlp_col3:
+    #     st.markdown(markdown_top_center("Super Validation Metrics:"), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center(f"Accuracy: {nlp_superval_accuracy:.5f}"), unsafe_allow_html=True)
+    #     st.write(" ")
+    #     st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center(nlp_superval_prec), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center(nlp_superval_recall), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
+    #     st.markdown(markdown_top_center(nlp_superval_f1), unsafe_allow_html=True)
+        
     
     st.divider()
 
@@ -302,62 +321,26 @@ with tab3:
 with tab4:
     
     st.subheader("Model Prediction")
-    st.write("This is where you can predict whether the credit card is fraudulent or not.")
+    st.write("This is where you can predict.")
     st.divider()
 
     # Creating a form for user input
     with st.form(key="PredictionForm"): 
         
         selected_model = st.selectbox(label="Select Model",
-                                      options=["IsolationForest", "LocalOutlier factor", "One-class SVM"])
+                                      options=["NN", "CV", "NLP"])
         
         # Mapping model names to their respective paths
         model_path_mapping = {
-            "IsolationForest": st.session_state.isolation_forest_path,
-            "LocalOutlier factor": st.session_state.local_outlier_factor_path,
-            "One-class SVM": st.session_state.oneclass_svm_path
+            "NN": st.session_state.nn_model_path,
+            "CV": st.session_state.cv_model_path,
+            # "NLP": st.session_state.nlp_model_path
         }
-        transaction_date = st.date_input(label="Transaction date",
-                                        format="DD-MM-YYYY",
-                                        value=datetime.date(2023, 6, 30))
-                                        
-        transaction_amount = st.number_input(label="Transaction amount",
-                                      min_value=0.0,
-                                      max_value=10000.0,
-                                      value=2625.2)
-        
-        merchant_category = st.selectbox(label="Merchant Category",
-                               options=["Restaurant", "Groceries", "Healthcare", "Entertainment", "Education", "Travel", "Clothing", "Electronics"])
-
-        card_type = st.selectbox(label="Card Type",
-                               options=["Amex", "Visa", "Discover", "MasterCard"])
-        
-        transaction_location = st.selectbox(label="Transaction location",
-                                             options=["Bengaluru","Jaipur","Indore","Bhopal","Pune","Chennai","Delhi","Mumbai","Ahemdabad","Hyderabad"])
-        
-        cardholder_age = st.number_input(label="Cardholder Age (in years)",
-                                      min_value=18,
-                                      max_value=100,
-                                      value=25)
-        
-        cardholder_gender = st.selectbox(label="Cardholder Gender",
-                                      options= ["Male", "Female", "Other"])
-        
-        transaction_description = st.text_input(label="Transaction description", value="Nunc purus")
-        
-        account_balance = st.number_input(label="Account Balance",
-                                           min_value=100,
-                                           max_value= 1000000, 
-                                           value=5000)
-        
-        calander_income = st.number_input(label="Calander Income",
-                                           min_value=20000,
-                                           max_value= 5000000, 
-                                           value=22500)
-        
+        # File uploader for image upload
+        uploaded_image = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"])
         
         # The form always needs a submit button to trigger the form submission
         if st.form_submit_button(label="Predict", use_container_width=True):
-            user_input = [transaction_date, transaction_amount,merchant_category,card_type,transaction_location,cardholder_age,cardholder_gender,transaction_description,account_balance,calander_income, model_path_mapping[selected_model]]
+            user_input = [uploaded_image, model_path_mapping[selected_model]]
             
             st.write(predict_output(*user_input))  # Calling the predict_output function with user input and displaying the output

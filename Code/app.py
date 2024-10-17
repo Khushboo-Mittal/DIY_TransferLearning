@@ -47,23 +47,6 @@ st.divider()
 # Declaring session states(streamlit variables) for saving the path throught page reloads
 # This is how we declare session state variables in streamlit.
 
-# PostgreSQL 
-if "postgres_username" not in st.session_state:
-    st.session_state.postgres_username = "User"
-    
-if "postgres_password" not in st.session_state:
-    st.session_state.postgres_password = "password"
-    
-if "postgres_host" not in st.session_state:
-    st.session_state.postgres_host = "localhost"
-
-if "postgres_port" not in st.session_state:
-    st.session_state.postgres_port = "5432"
-    
-if "postgres_database" not in st.session_state:
-    st.session_state.postgres_database = "Mock_Data"
-
-
 # MongoDB
 if "mongodb_host" not in st.session_state:
     st.session_state.mongodb_host = "localhost"
@@ -75,8 +58,11 @@ if "mongodb_db" not in st.session_state:
     st.session_state.mongodb_db = "1"
 
 # Paths
-if "master_data_path" not in st.session_state:
-    st.session_state.master_data_path = "Data/Master/Mock_data.csv"
+if "facemask_data_path" not in st.session_state:
+    st.session_state.facemask_data_path = "Data/Master/FaceMaskData/images"
+    
+if "tweet_data_path" not in st.session_state:
+    st.session_state.tweet_data_path = "Data/Master/TwitterData/twitter_data.csv"
     
 if "isolation_forest_path" not in st.session_state:
     st.session_state.isolation_forest_path = "isolation_forest_model.pkl"
@@ -97,21 +83,7 @@ with tab1:
     st.divider()
     
     with st.form(key="Config Form"):
-        tab_pg, tab_mongodb, tab_paths = st.tabs(["PostgreSQL", "MongoDB", "Paths"])
-        
-        # Tab for PostrgreSQL Configuration
-        with tab_pg:
-            st.markdown("<h2 style='text-align: center; color: white;'>PostgreSQL Configuration</h2>", unsafe_allow_html=True)
-            st.write(" ")
-            
-            st.write("Enter PostgreSQL Configuration Details:")
-            st.write(" ")
-            
-            st.session_state.postgres_username = st.text_input("Username", st.session_state.postgres_username)
-            st.session_state.postgres_password = st.text_input("Password", st.session_state.postgres_password, type="password")
-            st.session_state.postgres_host = st.text_input("Postgres Host", st.session_state.postgres_host)
-            st.session_state.postgres_port = st.text_input("Port", st.session_state.postgres_port)
-            st.session_state.postgres_database = st.text_input("Database", st.session_state.postgres_database)
+        tab_mongodb, tab_paths = st.tabs(["MongoDB", "Paths"])
         
         # Tab for MongoDB Configuration
         with tab_mongodb:
@@ -133,7 +105,8 @@ with tab1:
             st.write("Enter Path Configuration Details:")
             st.write(" ")
             
-            st.session_state.master_data_path = st.text_input("Master Data Path", st.session_state.master_data_path)
+            st.session_state.facemask_data_path = st.text_input("FaceMaskData Data Path", st.session_state.facemask_data_path)
+            st.session_state.tweet_data_path = st.text_input("Tweets Data Path", st.session_state.tweet_data_path)
             st.session_state.isolation_forest_path = st.text_input("Isolation Forest Model Path", st.session_state.isolation_forest_path)
             st.session_state.local_outlier_factor_path = st.text_input("Local Outlier Factor Model Path", st.session_state.local_outlier_factor_model_path)
             st.session_state.oneclass_svm_path = st.text_input("One-Class SVM Model Path", st.session_state.oneclass_svm_path)
@@ -148,16 +121,24 @@ with tab2:
     st.divider()
     
     # Training the Models
-    selected_model = st.selectbox("Select Model", ["IsolationForest", "LocalOutlier factor", "One-class SVM"])
+    selected_model = st.selectbox("Select Model", ["NLP", "NN", "CV"])
     if st.button("Train Model", use_container_width=True):  # Adding a button to trigger model training
         with st.spinner("Training model..."):  # Displaying a status message while training the model
             st.write("Ingesting data...")  # Displaying a message for data ingestion
-            ingest_data(st.session_state.master_data_path, st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db,"tweet_data")  # Calling the ingest_data function
+            collection_name = "datacollectionname"
+            if selected_model == "NLP":
+                data_path = st.session_state.tweet_data_path
+                collection_name = "tweet_data"
+            else:
+                data_path = st.session_state.facemask_data_path
+                collection_name = "facemask_data"
+            ingest_data(st.session_state.master_data_path, st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db,data_path,collection_name)  # Calling the ingest_data function
             st.write("Data Ingested Successfully! ✅")  # Displaying a success message
             
-            st.write("Preprocessing data...")  # Displaying a message for data preprocessing
-            data_postgres_processed= load_and_preprocess_data(st.session_state.postgres_username, st.session_state.postgres_password, st.session_state.postgres_host, st.session_state.postgres_port, st.session_state.postgres_database)  # Calling the load_and_preprocess_data function
-            st.write("Data Preprocessed Successfully! ✅")  # Displaying a success message
+            if collection_name=="tweet_data":
+                st.write("Preprocessing data...")  # Displaying a message for data preprocessing
+                data_postgres_processed= load_and_preprocess_data(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db)  # Calling the load_and_preprocess_data function
+                st.write("Data Preprocessed Successfully! ✅")  # Displaying a success message
             
             st.write("Splitting data into train, test, validation, and super validation sets...")  # Displaying a message for data splitting
             split_data(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, data_postgres_processed) # Calling the split_data function

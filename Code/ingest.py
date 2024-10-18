@@ -24,6 +24,7 @@ import pandas as pd # Importing pandas for data manipulation
 import csv
 import os
 from pymongo import MongoClient
+import streamlit as st
 
 def ingest_data(data_path, mongodb_host, mongodb_port, mongodb_db,mongo_collection):
 
@@ -31,11 +32,23 @@ def ingest_data(data_path, mongodb_host, mongodb_port, mongodb_db,mongo_collecti
     client = MongoClient(host=mongodb_host, port=mongodb_port)
     db = client[mongodb_db]
     collection = db[mongo_collection]
-
-    # If the path is a CSV file, read and insert CSV data
-    if os.path.isfile(data_path) and data_path.lower().endswith('.csv'):
-        with open(data_path, mode="r") as file:
+    st.write(f"Provided file path: {data_path}")
+     # Check if the file exists
+    if not os.path.exists(data_path):
+        st.write("File does not exist at the provided path.")
+        return
+        
+    # # Read and insert CSV data with utf-8 encoding
+    if not data_path.lower().endswith('.csv'):
+        st.write("The file is not a CSV file.")
+        return
+    with open(data_path, mode="r", encoding="utf-8") as file:
             reader = csv.DictReader(file)
             data = list(reader)
-            collection.insert_many(data)
+            if data:  # Insert only if data is not empty
+                collection.insert_many(data)
+                st.write(f"Inserted {len(data)} records into {mongo_collection}.")
+            else:
+                st.write("No data found in the CSV file.")
+   
 

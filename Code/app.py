@@ -199,8 +199,6 @@ with tab3:
         
 
     st.divider()
-
-    nlp_test_accuracy,nlp_test_prec,nlp_test_recall,nlp_test_f1 = train_model_nlp(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.nlp_model_path)
         
     # # Displaying the metrics for the NLP Model
     st.markdown("<h3 style='text-align: center; color: black;'>NLP Model</h3>", unsafe_allow_html=True)

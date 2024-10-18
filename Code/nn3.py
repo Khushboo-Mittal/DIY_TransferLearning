@@ -83,8 +83,8 @@ class MaskDataset(object):
         img_name = self.imgs[idx]
         label_name = self.labels[idx]
 
-        img_path = os.path.join("FaceMaskData/images/", img_name)  
-        label_path = os.path.join("FaceMaskData/annotations/", label_name)  
+        img_path = os.path.join("Data/FaceMaskData/images/", img_name)  
+        label_path = os.path.join("Data/FaceMaskData/annotations/", label_name)  
         img = Image.open(img_path).convert("RGB")
         target = generate_target(idx, label_path)
 

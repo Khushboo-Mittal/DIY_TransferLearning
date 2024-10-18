@@ -1,0 +1,9 @@
+names:
+- with_mask
+- without_mask
+- mask_weared_incorrect
+nc: 3
+superval: /Users/tanishapriya/Desktop/DIY_TransferLearning/data/superval/images
+test: /Users/tanishapriya/Desktop/DIY_TransferLearning/data/test/images
+train: /Users/tanishapriya/Desktop/DIY_TransferLearning/data/train/images
+val: /Users/tanishapriya/Desktop/DIY_TransferLearning/data/val/images

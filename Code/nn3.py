@@ -65,8 +65,8 @@ def generate_target(image_id, file):
         return target
 
 # Load image and label filenames
-imgs = list(sorted(os.listdir("FaceMaskData/images/")))  
-labels = list(sorted(os.listdir("FaceMaskData/annotations/"))) 
+imgs = list(sorted(os.listdir("Data/FaceMaskData/images/")))  
+labels = list(sorted(os.listdir("Data/FaceMaskData/annotations/"))) 
 
 class MaskDataset(object):
     """Custom dataset class for loading images and annotations."""

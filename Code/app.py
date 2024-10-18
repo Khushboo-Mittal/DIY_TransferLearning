@@ -47,7 +47,8 @@ st.divider()
 
 # Declaring session states(streamlit variables) for saving the path throught page reloads
 # This is how we declare session state variables in streamlit.
-
+nn_test_accuracy, nn_test_prec, nn_test_recall = 0, 0, 0
+nlp_test_accuracy, nlp_test_prec, nlp_test_recall, nlp_test_f1 = 0, 0, 0, 0
 # MongoDB
 if "mongodb_host" not in st.session_state:
     st.session_state.mongodb_host = "localhost"
@@ -139,19 +140,20 @@ with tab2:
             st.write("Data Split Successfully! ✅")  # Displaying a success message
             
             st.write("Training model...")  # Displaying a message for model training
-            
             # Choosing the model to train based on the user's selection
             if selected_model == "NN":
                 # Calling the train_model function and storing the training accuracy and best hyperparameters
                 nn_test_accuracy,nn_test_prec,nn_test_recall = train_model_nn(st.session_state.nn_model_path)
+                st.success(f"{selected_model} Model Successfully trained with accuracy score: {nn_test_accuracy:.5f}")
             # elif selected_model == "CV":
                 # accuracy = train_model_cv( st.session_state.cv_model_path)
             if selected_model == "NLP":
                 nlp_test_accuracy,nlp_test_prec,nlp_test_recall,nlp_test_f1 = train_model_nlp(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.nlp_model_path)
+                st.success(f"{selected_model} Model Successfully trained with accuracy score: {nlp_test_accuracy:.5f}")
             st.write("Model Trained Successfully! ✅")  # Displaying a success message
         
         # Displaying the training accuracy
-        st.success(f"{selected_model} Model Successfully trained with average silhouette score: {nlp_test_accuracy:.5f}")
+        st.success(f"{selected_model} Model Successfully trained with accuracy score: {nlp_test_accuracy:.5f}")
 
 # Tab for Model Evaluation
 with tab3:

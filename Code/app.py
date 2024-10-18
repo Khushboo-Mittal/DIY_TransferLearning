@@ -32,7 +32,7 @@ from preprocess import load_and_preprocess_data  # Importing the load_and_prepro
 from split import split_data_and_store  # Importing the split_data function from split.py
 from nn import train_model_nn as train_model_nn # Importing the train_model function from model_training.py
 from cv import train_yolov8_model as train_model_cv # Importing the train_model function from model_training.py
-# from nlp import train_model as train_model_nlp 
+from nlp import train_model as train_model_nlp 
 from model_eval import evaluate_model  # Importing the evaluate_model function from model_eval.py
 from model_predict import predict_output  # Importing the predict_output function from model_predict.py
 from db_utils import load_FaceMask_data_from_mongodb as load_data_from_mongodb
@@ -126,39 +126,28 @@ with tab2:
     if st.button("Train Model", use_container_width=True):  # Adding a button to trigger model training
         with st.spinner("Training model..."):  # Displaying a status message while training the model
             st.write("Ingesting data...")  # Displaying a message for data ingestion
-            collection_name = "datacollectionname"
-            if selected_model == "NLP":
-                data_path = st.session_state.tweet_data_path
-                collection_name = "tweet_data"
-            else:
-                data_path = st.session_state.facemask_data_path
-                collection_name = "facemask_data"
+            data_path = st.session_state.tweet_data_path
+            collection_name = "tweet_data"
             ingest_data(st.session_state.master_data_path, st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db,data_path,collection_name)  # Calling the ingest_data function
             st.write("Data Ingested Successfully! ✅")  # Displaying a success message
             
-            if collection_name=="tweet_data":
-                st.write("Preprocessing data...")  # Displaying a message for data preprocessing
-                data_postgres_processed= load_and_preprocess_data(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db)  # Calling the load_and_preprocess_data function
-                st.write("Data Preprocessed Successfully! ✅")  # Displaying a success message
-                st.write("Splitting data into train, test, validation, and super validation sets...")  # Displaying a message for data splitting
-                split_data_and_store(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, data_postgres_processed) # Calling the split_data function
-                st.write("Data Split Successfully! ✅")  # Displaying a success message
-            elif collection_name=="facemask_data":
-                data = load_data_from_mongodb(st.session_state.mongodb_db, collection_name)
-                st.write("Splitting data into train, test, validation, and super validation sets...")  # Displaying a message for data splitting
-                split_data_and_store(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, data) # Calling the split_data function
-                st.write("Data Split Successfully! ✅")  # Displaying a success message
+            st.write("Preprocessing data...")  # Displaying a message for data preprocessing
+            data_postgres_processed= load_and_preprocess_data(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db)  # Calling the load_and_preprocess_data function
+            st.write("Data Preprocessed Successfully! ✅")  # Displaying a success message
+            st.write("Splitting data into train, test, validation, and super validation sets...")  # Displaying a message for data splitting
+            split_data_and_store(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, data_postgres_processed) # Calling the split_data function
+            st.write("Data Split Successfully! ✅")  # Displaying a success message
             
             st.write("Training model...")  # Displaying a message for model training
             
             # Choosing the model to train based on the user's selection
             if selected_model == "NN":
                 # Calling the train_model function and storing the training accuracy and best hyperparameters
-                accuracy = train_model_nn(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.nn_model_path)
-            elif selected_model == "CV":
-                accuracy = train_model_cv(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.cv_model_path)
-            # elif selected_model == "NLP":
-            #     silhouette_avg, best_params = train_model_nlp(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.oneclass_svm_path)
+                nn_test_accuracy,nn_test_prec,nn_test_recall,nn_test_f1 = train_model_nn(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.nn_model_path)
+            # elif selected_model == "CV":
+            #     accuracy = train_model_cv(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.cv_model_path)
+            elif selected_model == "NLP":
+                nlp_test_accuracy,nlp_test_prec,nlp_test_recall,nlp_test_f1 = train_model_nlp(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.nlp_model_path)
             st.write("Model Trained Successfully! ✅")  # Displaying a success message
         
         # Displaying the training accuracy
@@ -174,95 +163,37 @@ with tab3:
     st.markdown("<h3 style='text-align: center; color: black;'>NN Model</h3>", unsafe_allow_html=True)
     st.divider()
     
-    # Get the model test, validation, and super validation metrics
-    nn_test_accuracy, nn_test_prec, nn_test_recall, nn_test_f1, nn_val_accuracy, nn_val_prec, nn_val_recall, nn_val_f1, nn_superval_accuracy, nn_superval_prec, nn_superval_recall, nn_superval_f1 = evaluate_model(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.nn_model_path)
-    
-    # Display model metrics in three columns
-    nn_col1,nn_col2, nn_col3 = st.columns(3)
-    
     # Helper function to center text vertically at the top using markdown
     def markdown_top_center(text):
         return f'<div style="display: flex; justify-content: center; align-items: flex-start; height: 100%;">{text}</div>'
 
-    with nn_col1:
-        # Displaying metrics for test, validation, and super validation sets
-        st.markdown(markdown_top_center("Test Metrics:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(f"Accracy: {nn_test_accuracy:.5f}"), unsafe_allow_html=True)
-        st.write(" ")
-        st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(nn_test_prec), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(nn_test_recall), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(nn_test_f1), unsafe_allow_html=True)
-
-    with nn_col2:
-        st.markdown(markdown_top_center("Validation Metrics:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(f"Accuracy: {nn_val_accuracy:.5f}"), unsafe_allow_html=True)
-        st.write(" ")
-        st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(nn_val_prec), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(nn_val_recall), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(nn_val_f1), unsafe_allow_html=True)
-
-    with nn_col3:
-        st.markdown(markdown_top_center("Super Validation Metrics:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(f"Accuracy: {nn_superval_accuracy:.5f}"), unsafe_allow_html=True)
-        st.write(" ")
-        st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(nn_superval_prec), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(nn_superval_recall), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(nn_superval_f1), unsafe_allow_html=True)
-        
+    # Displaying metrics for test, validation, and super validation sets
+    st.markdown(markdown_top_center("Test Metrics:"), unsafe_allow_html=True)
+    st.markdown(markdown_top_center(f"Accracy: {nn_test_accuracy:.5f}"), unsafe_allow_html=True)
+    st.write(" ")
+    st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
+    st.markdown(markdown_top_center(nn_test_prec), unsafe_allow_html=True)
+    st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
+    st.markdown(markdown_top_center(nn_test_recall), unsafe_allow_html=True)
+    st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
+    st.markdown(markdown_top_center(nn_test_f1), unsafe_allow_html=True)  
     st.divider()
     
     # Displaying the metrics for the CV Model
     st.markdown("<h3 style='text-align: center; color: black;'>CV Model</h3>", unsafe_allow_html=True)
     st.divider()
 
-    # Get the model test, validation, and super validation metrics for CV
-    cv_test_accuracy, cv_test_prec, cv_test_recall, cv_test_f1, cv_val_accuracy, cv_val_prec, cv_val_recall, cv_val_f1, cv_superval_accuracy, cv_superval_prec, cv_superval_recall, cv_superval_f1 = evaluate_model(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.cv_model_path)
-    # Display model metrics in three columns
-    cv_col1, cv_col2, cv_col3 = st.columns(3)
-
-    # Display LOF model metrics using the same helper function to center text vertically at the top
-    with cv_col1:
-        # Displaying metrics for test, validation, and super validation sets
-        st.markdown(markdown_top_center("Test Metrics:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(f"Accracy: {cv_test_accuracy:.5f}"), unsafe_allow_html=True)
-        st.write(" ")
-        st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(cv_test_prec), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(cv_test_recall), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(cv_test_f1), unsafe_allow_html=True)
-
-    with cv_col2:
-        st.markdown(markdown_top_center("Validation Metrics:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(f"Accuracy: {cv_val_accuracy:.5f}"), unsafe_allow_html=True)
-        st.write(" ")
-        st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(cv_val_prec), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(cv_val_recall), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(cv_val_f1), unsafe_allow_html=True)
-
-    with cv_col3:
-        st.markdown(markdown_top_center("Super Validation Metrics:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(f"Accuracy: {cv_superval_accuracy:.5f}"), unsafe_allow_html=True)
-        st.write(" ")
-        st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(cv_superval_prec), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(cv_superval_recall), unsafe_allow_html=True)
-        st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
-        st.markdown(markdown_top_center(cv_superval_f1), unsafe_allow_html=True)
+    # # Display LOF model metrics using the same helper function to center text vertically at the top
+    #     # Displaying metrics for test, validation, and super validation sets
+    # st.markdown(markdown_top_center("Test Metrics:"), unsafe_allow_html=True)
+    # st.markdown(markdown_top_center(f"Accracy: {cv_test_accuracy:.5f}"), unsafe_allow_html=True)
+    # st.write(" ")
+    # st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
+    # st.markdown(markdown_top_center(cv_test_prec), unsafe_allow_html=True)
+    # st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
+    # st.markdown(markdown_top_center(cv_test_recall), unsafe_allow_html=True)
+    # st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
+    # st.markdown(markdown_top_center(cv_test_f1), unsafe_allow_html=True)
         
 
     st.divider()
@@ -270,48 +201,21 @@ with tab3:
 
         
     # # Displaying the metrics for the NLP Model
-    # st.markdown("<h3 style='text-align: center; color: black;'>NLP Model</h3>", unsafe_allow_html=True)
-    # st.divider()
-
-    # # Get the model test, validation, and super validation metrics for NLP
-    # nlp_test_accuracy, nlp_test_prec, nlp_test_recall, nlp_test_f1, nlp_val_accuracy, nlp_val_prec, nlp_val_recall, nlp_val_f1, nlp_superval_accuracy, nlp_superval_prec, nlp_superval_recall, nlp_superval_f1 = evaluate_model(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.nlp_model_path)
-    
+    st.markdown("<h3 style='text-align: center; color: black;'>NLP Model</h3>", unsafe_allow_html=True)
+    st.divider()
     # # Display model metrics in three columns for NLP
     # nlp_col1, nlp_col2, nlp_col3 = st.columns(3)
-    
-    # with nlp_col1:
-    #     # Displaying metrics for test, validation, and super validation sets
-    #     st.markdown(markdown_top_center("Test Metrics:"), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center(f"Accracy: {nlp_test_accuracy:.5f}"), unsafe_allow_html=True)
-    #     st.write(" ")
-    #     st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center(nlp_test_prec), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center(nlp_test_recall), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center(nlp_test_f1), unsafe_allow_html=True)
+        # Displaying metrics for test, validation, and super validation sets
+    st.markdown(markdown_top_center("Test Metrics:"), unsafe_allow_html=True)
+    st.markdown(markdown_top_center(f"Accracy: {nlp_test_accuracy:.5f}"), unsafe_allow_html=True)
+    st.write(" ")
+    st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
+    st.markdown(markdown_top_center(nlp_test_prec), unsafe_allow_html=True)
+    st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
+    st.markdown(markdown_top_center(nlp_test_recall), unsafe_allow_html=True)
+    st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
+    st.markdown(markdown_top_center(nlp_test_f1), unsafe_allow_html=True)
 
-    # with nlp_col2:
-    #     st.markdown(markdown_top_center("Validation Metrics:"), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center(f"Accuracy: {nlp_val_accuracy:.5f}"), unsafe_allow_html=True)
-    #     st.write(" ")
-    #     st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center(nlp_val_prec), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center(nlp_val_recall), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center(nlp_val_f1), unsafe_allow_html=True)
-
-    # with nlp_col3:
-    #     st.markdown(markdown_top_center("Super Validation Metrics:"), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center(f"Accuracy: {nlp_superval_accuracy:.5f}"), unsafe_allow_html=True)
-    #     st.write(" ")
-    #     st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center(nlp_superval_prec), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center(nlp_superval_recall), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
-    #     st.markdown(markdown_top_center(nlp_superval_f1), unsafe_allow_html=True)
         
     
     st.divider()
@@ -334,13 +238,15 @@ with tab4:
         model_path_mapping = {
             "NN": st.session_state.nn_model_path,
             "CV": st.session_state.cv_model_path,
-            # "NLP": st.session_state.nlp_model_path
+            "NLP": st.session_state.nlp_model_path
         }
         # File uploader for image upload
         uploaded_image = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"])
+        # Text area for tweet content input
+        tweet_content = st.text_area("Enter Tweet Content", height=150)
         
         # The form always needs a submit button to trigger the form submission
         if st.form_submit_button(label="Predict", use_container_width=True):
-            user_input = [uploaded_image, model_path_mapping[selected_model]]
+            user_input = [uploaded_image,tweet_content, model_path_mapping[selected_model]]
             
             st.write(predict_output(*user_input))  # Calling the predict_output function with user input and displaying the output

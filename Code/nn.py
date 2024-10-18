@@ -32,7 +32,7 @@ import matplotlib.patches as patches
 import os
 import pickle  
 from pymongo import MongoClient
-from db_utils import load_FaceMask_data_from_mongodb as load_data_from_mongodb
+# from db_utils import load_FaceMask_data_from_mongodb as load_data_from_mongodb
 
 # Generate bounding boxes and labels
 def generate_box(obj):
@@ -96,13 +96,13 @@ def get_model_instance_segmentation(num_classes):
     return model
 
 # Train the model
-def train_model_nn(mongodb_host, mongodb_port, mongodb_db, collection_name, model_path, num_epochs=10):
+def train_model_nn(mongodb_host, mongodb_port, mongodb_db,collection_name, model_path, num_epochs=10):
     # Connect to MongoDB
     client = MongoClient(host=mongodb_host, port=mongodb_port)
     db = client[mongodb_db]
 
     # Create dataset and data loader
-    dataset = MaskDataset(db, collection_name, data_transform)
+    dataset = MaskDataset(db,collection_name, data_transform)
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=4, collate_fn=lambda x: tuple(zip(*x)))
 
     # Define the model and optimizer
@@ -144,10 +144,13 @@ def train_model_nn(mongodb_host, mongodb_port, mongodb_db, collection_name, mode
 
         metrics = evaluate_predictions(all_preds, all_annotations)  # Evaluate predictions
         accuracy = metrics['accuracy']
+        precision = metrics['precision']
+        recall = metrics['recall']
+        f1 = metrics['f1_score']
 
     # Save the trained model
     save_model(model, model_path)
-    return accuracy
+    return accuracy, precision, recall, f1
 
 # Save model function
 def save_model(model, model_path):
@@ -211,12 +214,12 @@ def evaluate_predictions(preds, targets, iou_threshold=0.5):
     # Calculate metrics
     total_predictions = true_positives + false_positives + false_negatives
     accuracy = true_positives / total_predictions if total_predictions > 0 else 0
-    # precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
-    # recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
-    # f1_score = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
+    recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
+    f1_score = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
     # mean_iou = np.mean(ious) if ious else 0
     
-    return accuracy
+    return accuracy, precision, recall, f1_score
 
 # # Evaluate model on test data
 # model.eval()
@@ -233,33 +236,33 @@ def evaluate_predictions(preds, targets, iou_threshold=0.5):
 # import matplotlib.pyplot as plt
 # import matplotlib.patches as patches
 
-# # Class label mapping
-# class_mapping = {0: "Without Mask", 1: "With Mask", 2: "Mask Worn Incorrectly"}
+# Class label mapping
+class_mapping = {0: "Without Mask", 1: "With Mask", 2: "Mask Worn Incorrectly"}
 
-# def plot_image(image, prediction):
-#     # Convert image tensor to a NumPy array
-#     if torch.is_tensor(image):
-#         image = image.detach().cpu().numpy().transpose(1, 2, 0)  # Convert to (H, W, C)
+def plot_image(image, prediction):
+    # Convert image tensor to a NumPy array
+    if torch.is_tensor(image):
+        image = image.detach().cpu().numpy().transpose(1, 2, 0)  # Convert to (H, W, C)
     
-#     # Plot the image
-#     fig, ax = plt.subplots(1)
-#     ax.imshow(image)
+    # Plot the image
+    fig, ax = plt.subplots(1)
+    ax.imshow(image)
 
-#     # Plot bounding boxes
-#     boxes = prediction['boxes'].detach().cpu().numpy()  # Detach boxes from computation graph
-#     labels = prediction['labels'].detach().cpu().numpy()  # Detach labels from computation graph
+    # Plot bounding boxes
+    boxes = prediction['boxes'].detach().cpu().numpy()  # Detach boxes from computation graph
+    labels = prediction['labels'].detach().cpu().numpy()  # Detach labels from computation graph
 
-#     # Plot each box with class names
-#     for i, box in enumerate(boxes):
-#         xmin, ymin, xmax, ymax = box
-#         rect = patches.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin,
-#                                  linewidth=1, edgecolor='r', facecolor='none')
-#         ax.add_patch(rect)
-#         ax.text(xmin, ymin, class_mapping[labels[i]], color='white', fontsize=12, 
-#                 bbox=dict(facecolor='red', alpha=0.5))
+    # Plot each box with class names
+    for i, box in enumerate(boxes):
+        xmin, ymin, xmax, ymax = box
+        rect = patches.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin,
+                                 linewidth=1, edgecolor='r', facecolor='none')
+        ax.add_patch(rect)
+        ax.text(xmin, ymin, class_mapping[labels[i]], color='white', fontsize=12, 
+                bbox=dict(facecolor='red', alpha=0.5))
     
-#     plt.axis('off')
-#     plt.show()
+    plt.axis('off')
+    plt.show()
 
 # # Display predictions
 # for img, pred in zip(imgs, preds):
@@ -278,5 +281,5 @@ def evaluate_predictions(preds, targets, iou_threshold=0.5):
 #     model.load_state_dict(torch.load(model_save_path))
 #     return model
 
-# # To load the model later, simply call:
-# # model = load_model()
+# To load the model later, simply call:
+# model = load_model()

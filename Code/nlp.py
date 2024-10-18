@@ -6,13 +6,7 @@ import tensorflow as tf
 from pymongo import MongoClient
 from sklearn.metrics import classification_report, precision_score, recall_score, f1_score
 import pickle  # For loading data
-
-def load_data_from_mongodb(db, collection_name):
-    collection = db[collection_name]
-    data = collection.find_one()  # Retrieve the first document
-    if data and 'data' in data:
-        return pickle.loads(data['data'])  # Deserialize the pickled binary data
-    return None
+from db_utils import load_data_from_mongodb
 
 def save_model(model, model_path):
     # Open a file in write-binary mode to save the model
@@ -43,21 +37,20 @@ def train_model(mongodb_host, mongodb_port, mongodb_db, model_path):
 
     client = MongoClient(host=mongodb_host, port=mongodb_port)
     db = client[mongodb_db]
-    collection = db['preprocessed_tweet_data']
     # Load the training data from MongoDB
-    X_train = load_data_from_mongodb(collection,'X_train')
-    X_train = X_train.values
-    X_test = load_data_from_mongodb(collection,'X_test')
-    X_test = X_test.values
-    X_val = load_data_from_mongodb(collection,'X_val')
-    X_val = X_val.values
+    X_train = load_data_from_mongodb(db,'x_train')
+    # X_train = X_train.values
+    X_test = load_data_from_mongodb(db,'x_test')
+    # X_test = X_test.values
+    X_val = load_data_from_mongodb(db,'x_val')
+    # X_val = X_val.values
     
-    y_train = load_data_from_mongodb(collection,'y_train')
-    y_train = y_train.values
-    y_test = load_data_from_mongodb(collection,'y_test')
-    y_test = y_test.values
-    y_val = load_data_from_mongodb(collection,'y_val')
-    y_val = y_val.values
+    y_train = load_data_from_mongodb(db,'y_train')
+    # y_train = y_train.values
+    y_test = load_data_from_mongodb(db,'y_test')
+    # y_test = y_test.values
+    y_val = load_data_from_mongodb(db,'y_val')
+    # y_val = y_val.values
     
     xlist = [X_train, X_test, X_val]
     X = pd.concat(xlist)

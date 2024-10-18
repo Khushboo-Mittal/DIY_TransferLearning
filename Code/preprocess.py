@@ -26,6 +26,7 @@ from sqlalchemy import create_engine
 from sklearn.preprocessing import LabelEncoder  # Importing tools for data preprocessing
 import spacy
 from pymongo import MongoClient
+import streamlit as st
 
 def preprocess_mongo_data(data):
     data.drop_duplicates(inplace=True)
@@ -54,19 +55,21 @@ def load_and_preprocess_data(mongodb_host, mongodb_port, mongodb_db):
     client = MongoClient(host=mongodb_host, port=mongodb_port)
     db = client[mongodb_db]
     collection = db["tweet_data"]
+    new_collection = db["preprocessed_tweet_data"]
 
     # Fetch data from MongoDB and convert it to a pandas DataFrame
     data = list(collection.find())
     df = pd.DataFrame(data)
 
     # Drop the MongoDB ObjectId column (optional)
-    df.drop(columns=["_id"], inplace=True)
-    
+    # df.drop(columns=["_id"], inplace=True)
+    # If the collection exists and has data, skip preprocessing
+    if new_collection.estimated_document_count() > 0:
+        st.write(f"preprocessed_tweet_data already exists with data. Skipping preprocessing.")
+        return
     data_preprocessed = preprocess_mongo_data(df)
     
     data_dict = data_preprocessed.to_dict(orient="records")
-    
-    new_collection = db["preprocessed_tweet_data"]
     
     # Insert the data into the MongoDB collection
     new_collection.insert_many(data_dict)

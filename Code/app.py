@@ -30,12 +30,12 @@ import datetime  # Used for setting default value in streamlit form
 from ingest import ingest_data  # Importing the ingest_data function from ingest.py
 from preprocess import load_and_preprocess_data  # Importing the load_and_preprocess_data function from preprocess.py
 from split import split_data_and_store  # Importing the split_data function from split.py
-from nn import train_model_nn as train_model_nn # Importing the train_model function from model_training.py
-from cv import train_yolov8_model as train_model_cv # Importing the train_model function from model_training.py
+from nn3 import train_model as train_model_nn # Importing the train_model function from model_training.py
+# from cv import train_yolov8_model as train_model_cv # Importing the train_model function from model_training.py
 from nlp import train_model as train_model_nlp 
-from model_eval import evaluate_model  # Importing the evaluate_model function from model_eval.py
+# from model_eval import evaluate_model  # Importing the evaluate_model function from model_eval.py
 from model_predict import predict_output  # Importing the predict_output function from model_predict.py
-from db_utils import load_FaceMask_data_from_mongodb as load_data_from_mongodb
+# from db_utils import load_FaceMask_data_from_mongodb as load_data_from_mongodb
 
 
 # Setting the page configuration for the web app
@@ -60,10 +60,10 @@ if "mongodb_db" not in st.session_state:
 
 # Paths
 if "facemask_data_path" not in st.session_state:
-    st.session_state.facemask_data_path = "Data/Master/FaceMaskData/images"
+    st.session_state.facemask_data_path = "Data/FaceMaskData/images"
     
 if "tweet_data_path" not in st.session_state:
-    st.session_state.tweet_data_path = "Data/Master/TwitterData/twitter_data.csv"
+    st.session_state.tweet_data_path = "Data/TwitterData/twitter_data.csv"
     
 if "nn_model_path" not in st.session_state:
     st.session_state.nn_model_path = "nn_model.pkl"
@@ -128,7 +128,7 @@ with tab2:
             st.write("Ingesting data...")  # Displaying a message for data ingestion
             data_path = st.session_state.tweet_data_path
             collection_name = "tweet_data"
-            ingest_data(st.session_state.master_data_path, st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db,data_path,collection_name)  # Calling the ingest_data function
+            ingest_data(st.session_state.tweet_data_path, st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db,collection_name)  # Calling the ingest_data function
             st.write("Data Ingested Successfully! ✅")  # Displaying a success message
             
             st.write("Preprocessing data...")  # Displaying a message for data preprocessing
@@ -143,15 +143,15 @@ with tab2:
             # Choosing the model to train based on the user's selection
             if selected_model == "NN":
                 # Calling the train_model function and storing the training accuracy and best hyperparameters
-                nn_test_accuracy,nn_test_prec,nn_test_recall,nn_test_f1 = train_model_nn(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.nn_model_path)
+                nn_test_accuracy,nn_test_prec,nn_test_recall = train_model_nn(st.session_state.nn_model_path)
             # elif selected_model == "CV":
-            #     accuracy = train_model_cv(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.cv_model_path)
-            elif selected_model == "NLP":
+                # accuracy = train_model_cv( st.session_state.cv_model_path)
+            if selected_model == "NLP":
                 nlp_test_accuracy,nlp_test_prec,nlp_test_recall,nlp_test_f1 = train_model_nlp(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.nlp_model_path)
             st.write("Model Trained Successfully! ✅")  # Displaying a success message
         
         # Displaying the training accuracy
-        st.success(f"{selected_model} Model Successfully trained with average silhouette score: {accuracy:.5f}")
+        st.success(f"{selected_model} Model Successfully trained with average silhouette score: {nlp_test_accuracy:.5f}")
 
 # Tab for Model Evaluation
 with tab3:
@@ -159,11 +159,11 @@ with tab3:
     st.write("This is where you can see the current metrics of the trained models")
     st.divider()
     
-    # Displaying the metrics for the NN Model
+    # # Displaying the metrics for the NN Model
     st.markdown("<h3 style='text-align: center; color: black;'>NN Model</h3>", unsafe_allow_html=True)
     st.divider()
     
-    # Helper function to center text vertically at the top using markdown
+    # # Helper function to center text vertically at the top using markdown
     def markdown_top_center(text):
         return f'<div style="display: flex; justify-content: center; align-items: flex-start; height: 100%;">{text}</div>'
 
@@ -175,8 +175,8 @@ with tab3:
     st.markdown(markdown_top_center(nn_test_prec), unsafe_allow_html=True)
     st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
     st.markdown(markdown_top_center(nn_test_recall), unsafe_allow_html=True)
-    st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
-    st.markdown(markdown_top_center(nn_test_f1), unsafe_allow_html=True)  
+    # st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
+    # st.markdown(markdown_top_center(nn_test_f1), unsafe_allow_html=True)  
     st.divider()
     
     # Displaying the metrics for the CV Model
@@ -198,7 +198,7 @@ with tab3:
 
     st.divider()
 
-
+    nlp_test_accuracy,nlp_test_prec,nlp_test_recall,nlp_test_f1 = train_model_nlp(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.nlp_model_path)
         
     # # Displaying the metrics for the NLP Model
     st.markdown("<h3 style='text-align: center; color: black;'>NLP Model</h3>", unsafe_allow_html=True)

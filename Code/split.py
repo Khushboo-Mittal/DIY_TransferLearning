@@ -38,15 +38,14 @@ def split_data(data):
     Split the data into training, testing, validation, and super validation sets.
     """
     # Convert the MongoDB data to a DataFrame if it's not already
-    if isinstance(data, pd.DataFrame):
-        X = data[:]  # Use the entire preprocessed data as features
-    elif isinstance(data, list):
-        X = data
+    X = data['Preprocessed Text']  # Use the entire preprocessed data as features
+    y = data['sentiment']
     # Split the data into train, test, validation, and super validation sets
-    X_train, X_temp = train_test_split(X, test_size=0.4, random_state=42)  # 60% train, 40% temp
-    X_test, X_temp = train_test_split(X_temp, test_size=0.625, random_state=42)  # 0.625 * 0.4 = 0.25 for test
-    X_val, X_superval = train_test_split(X_temp, test_size=0.5, random_state=42)  # 0.5 * 0.25 = 0.125 for validation and super validation
-    return X_train, X_test, X_val, X_superval
+    X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Split the temporary set into validation (50%) and test (50%) to get 10% each
+    X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
+    return X_train, X_test,X_val,y_train,y_val,y_test
 
 def store_to_mongo(data, db, collection_name):
     """
@@ -73,10 +72,10 @@ def split_data_and_store(mongodb_host, mongodb_port, mongodb_db, data):
     db = connect_to_mongodb(mongodb_host, mongodb_port, mongodb_db)
     
     # Split data into train, test, validation, and super validation sets
-    X_train, X_test, X_val, X_superval = split_data(data)
+    X_train, X_test,X_val,y_train,y_val,y_test = split_data(data)
     
     # Save split data into MongoDB
-    save_split_data(db, X_train, X_test, X_val, X_superval)
+    save_split_data(db, X_train, X_test,X_val,y_train,y_val,y_test)
     
     print('Data preprocessed, and split successfully!')
 

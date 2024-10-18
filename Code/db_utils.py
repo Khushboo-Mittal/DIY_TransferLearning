@@ -39,23 +39,5 @@ def insert_data_to_mongodb(data, collection_name, db):
         data_dict = data.to_dict(orient='records')
         # Insert data into MongoDB collection
         collection.insert_many(data_dict)
-    
-    # If data is not a DataFrame, assume it's a list of image paths
-    elif isinstance(data, list):
-        # Insert each image path into the MongoDB collection
-        for image_path in data:
-            collection.insert_one({"image_path": image_path})
             
-# Load image and annotation paths from MongoDB
-def load_FaceMask_data_from_mongodb(db, collection_name):
-    collection = db[collection_name]
-    image_paths, annotation_paths = [], []
-    
-    for document in collection.find():
-        if 'image_path' in document:
-            image_paths.append(document['image_path'])
-        if 'annotation_path' in document:
-            annotation_paths.append(document['annotation_path'])
-    
-    return image_paths, annotation_paths
 

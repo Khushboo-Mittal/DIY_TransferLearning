@@ -7,7 +7,7 @@
     # Environment:     
         # Python 3.11.5
         # Streamlit 1.36.0
-
+import streamlit as st
 import os
 import shutil
 import cv2
@@ -100,7 +100,7 @@ def create_yaml(output_path, classes):
 
 # Function to train the YOLOv8 model with only model_path as parameter
 # Function to train the YOLOv8 model with only model_path as parameter
-def train_yolov8_model(model_path, epochs=10, batch_size=32, img_size=640):
+def train_yolov8_model(model_path, epochs=1, batch_size=32, img_size=640):
     # Load necessary paths and data
     data_yaml = f'{os.getcwd()}/Data/data.yaml'  # Assuming the YAML is in the 'Data' folder
 
@@ -120,11 +120,11 @@ def train_yolov8_model(model_path, epochs=10, batch_size=32, img_size=640):
     results = model.val(data=data_yaml)
 
     # Extract evaluation metrics
-    accuracy = results['metrics']['accuracy']
-    precision = results['metrics']['precision']
-    recall = results['metrics']['recall']
-    f1 = results['metrics']['f1']
-    conf_matrix = results['confusion_matrix']
+    accuracy = results.metrics['accuracy']
+    precision = results.metrics['precision']
+    recall = results.metrics['recall']
+    f1 = results.metrics['f1']
+    conf_matrix = results.metrics['confusion_matrix']
 
     # Call the visualization function
     visualize_evaluation_metrics(accuracy, precision, recall, f1, conf_matrix)
@@ -139,7 +139,8 @@ def train_yolov8_model(model_path, epochs=10, batch_size=32, img_size=640):
     # Save the trained model
     save_model(model, model_path)
 
-    return model
+    # return model 
+    return accuracy,precision,recall,f1
 
 
 # Using the model.val() method to evaluate the model on the test set

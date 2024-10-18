@@ -31,7 +31,7 @@ from ingest import ingest_data  # Importing the ingest_data function from ingest
 from preprocess import load_and_preprocess_data  # Importing the load_and_preprocess_data function from preprocess.py
 from split import split_data_and_store  # Importing the split_data function from split.py
 from nn3 import train_model as train_model_nn # Importing the train_model function from model_training.py
-# from cv import train_yolov8_model as train_model_cv # Importing the train_model function from model_training.py
+from cv import train_yolov8_model as train_model_cv # Importing the train_model function from model_training.py
 from nlp import train_model as train_model_nlp 
 # from model_eval import evaluate_model  # Importing the evaluate_model function from model_eval.py
 from model_predict import predict_output  # Importing the predict_output function from model_predict.py
@@ -39,16 +39,14 @@ from model_predict import predict_output  # Importing the predict_output functio
 
 
 # Setting the page configuration for the web app
-st.set_page_config(page_title="Credit Card Fraud Prediction", page_icon=":chart_with_upwards_trend:", layout="centered")
+st.set_page_config(page_title="Transfer Learning", page_icon=":chart_with_upwards_trend:", layout="centered")
 
 # Adding a heading to the web app
-st.markdown("<h1 style='text-align: center; color: white;'>Credit Card Fraud Prediction </h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: white;'>Transfer Learning </h1>", unsafe_allow_html=True)
 st.divider()
 
 # Declaring session states(streamlit variables) for saving the path throught page reloads
 # This is how we declare session state variables in streamlit.
-nn_test_accuracy, nn_test_prec, nn_test_recall = 0, 0, 0
-nlp_test_accuracy, nlp_test_prec, nlp_test_recall, nlp_test_f1 = 0, 0, 0, 0
 # MongoDB
 if "mongodb_host" not in st.session_state:
     st.session_state.mongodb_host = "localhost"
@@ -75,6 +73,13 @@ if "cv_model_path" not in st.session_state:
 if "nlp_model_path" not in st.session_state:
     st.session_state.nlp_model_path = "nlp_model.pkl"
 
+
+
+
+
+nn_test_accuracy, nn_test_prec, nn_test_recall = 0, 0, 0
+cv_test_accuracy,cv_test_prec,cv_test_recall =0,0,0
+nlp_test_accuracy, nlp_test_prec, nlp_test_recall, nlp_test_f1 = 0, 0, 0, 0
 # Creating tabs for the web app.
 tab1, tab2, tab3, tab4 = st.tabs(["Model Config","Model Training","Model Evaluation", "Model Prediction"])
 
@@ -126,27 +131,29 @@ with tab2:
     selected_model = st.selectbox("Select Model", ["NLP", "NN", "CV"])
     if st.button("Train Model", use_container_width=True):  # Adding a button to trigger model training
         with st.spinner("Training model..."):  # Displaying a status message while training the model
-            st.write("Ingesting data...")  # Displaying a message for data ingestion
-            data_path = st.session_state.tweet_data_path
-            collection_name = "tweet_data"
-            ingest_data(st.session_state.tweet_data_path, st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db,collection_name)  # Calling the ingest_data function
-            st.write("Data Ingested Successfully! ✅")  # Displaying a success message
-            
-            st.write("Preprocessing data...")  # Displaying a message for data preprocessing
-            data_postgres_processed= load_and_preprocess_data(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db)  # Calling the load_and_preprocess_data function
-            st.write("Data Preprocessed Successfully! ✅")  # Displaying a success message
-            st.write("Splitting data into train, test, validation, and super validation sets...")  # Displaying a message for data splitting
-            split_data_and_store(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, data_postgres_processed) # Calling the split_data function
-            st.write("Data Split Successfully! ✅")  # Displaying a success message
-            
+            if selected_model == "NLP":
+                st.write("Ingesting data...")  # Displaying a message for data ingestion
+                data_path = st.session_state.tweet_data_path
+                collection_name = "tweet_data"
+                ingest_data(st.session_state.tweet_data_path, st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db,collection_name)  # Calling the ingest_data function
+                st.write("Data Ingested Successfully! ✅")  # Displaying a success message
+                
+                st.write("Preprocessing data...")  # Displaying a message for data preprocessing
+                data_postgres_processed= load_and_preprocess_data(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db)  # Calling the load_and_preprocess_data function
+                st.write("Data Preprocessed Successfully! ✅")  # Displaying a success message
+                st.write("Splitting data into train, test, validation, and super validation sets...")  # Displaying a message for data splitting
+                split_data_and_store(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, data_postgres_processed) # Calling the split_data function
+                st.write("Data Split Successfully! ✅")  # Displaying a success message
+                
             st.write("Training model...")  # Displaying a message for model training
             # Choosing the model to train based on the user's selection
             if selected_model == "NN":
                 # Calling the train_model function and storing the training accuracy and best hyperparameters
                 nn_test_accuracy,nn_test_prec,nn_test_recall = train_model_nn(st.session_state.nn_model_path)
                 st.success(f"{selected_model} Model Successfully trained with accuracy score: {nn_test_accuracy:.5f}")
-            # elif selected_model == "CV":
-                # accuracy = train_model_cv( st.session_state.cv_model_path)
+            elif selected_model == "CV":
+                cv_test_accuracy,cv_test_prec,cv_test_recall = train_model_cv( st.session_state.cv_model_path)
+                st.success(f"{selected_model} Model Successfully trained with accuracy score: {cv_test_accuracy:.5f}")
             if selected_model == "NLP":
                 nlp_test_accuracy,nlp_test_prec,nlp_test_recall,nlp_test_f1 = train_model_nlp(st.session_state.mongodb_host, st.session_state.mongodb_port, st.session_state.mongodb_db, st.session_state.nlp_model_path)
                 st.success(f"{selected_model} Model Successfully trained with accuracy score: {nlp_test_accuracy:.5f}")
@@ -186,14 +193,13 @@ with tab3:
     st.divider()
 
     # # Display LOF model metrics using the same helper function to center text vertically at the top
-    #     # Displaying metrics for test, validation, and super validation sets
-    # st.markdown(markdown_top_center("Test Metrics:"), unsafe_allow_html=True)
-    # st.markdown(markdown_top_center(f"Accracy: {cv_test_accuracy:.5f}"), unsafe_allow_html=True)
-    # st.write(" ")
-    # st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
-    # st.markdown(markdown_top_center(cv_test_prec), unsafe_allow_html=True)
-    # st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
-    # st.markdown(markdown_top_center(cv_test_recall), unsafe_allow_html=True)
+    st.markdown(markdown_top_center("Test Metrics:"), unsafe_allow_html=True)
+    st.markdown(markdown_top_center(f"Accracy: {cv_test_accuracy:.5f}"), unsafe_allow_html=True)
+    st.write(" ")
+    st.markdown(markdown_top_center("Precision:"), unsafe_allow_html=True)
+    st.markdown(markdown_top_center(cv_test_prec), unsafe_allow_html=True)
+    st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
+    st.markdown(markdown_top_center(cv_test_recall), unsafe_allow_html=True)
     # st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
     # st.markdown(markdown_top_center(cv_test_f1), unsafe_allow_html=True)
         

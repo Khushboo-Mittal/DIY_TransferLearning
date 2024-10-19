@@ -2,7 +2,7 @@
         # Name: Khushboo Mittal
         # Role: Architects
     # Version:
-        # Version: V 1.0 (11 October 2024)
+        # Version: V 1.0 (19 October 2024)
             # Developers: Khushboo Mittal
             # Unit test: Pass
             # Integration test: Pass
@@ -107,9 +107,7 @@ def get_model_instance_segmentation(num_classes):
     return model
 
 def save_model(model, model_path):
-    """Saves the model state as a .pkl file."""
-    with open(model_path, "wb") as f:
-        pickle.dump(model.state_dict(), f)
+    model.save(model_path)
 
 def calculate_iou(box1, box2):
     """Calculates the Intersection over Union (IoU) of two bounding boxes."""
@@ -178,7 +176,7 @@ def train_model(model_path):
     optimizer = torch.optim.SGD([p for p in model.parameters() if p.requires_grad], lr=0.005, momentum=0.9, weight_decay=0.0005)
     model.to(device)
     
-    num_epochs = 10  # Specify the number of epochs
+    num_epochs = 1  # Specify the number of epochs
     for epoch in range(num_epochs):
         model.train()
         epoch_loss = 0

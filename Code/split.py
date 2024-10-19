@@ -1,11 +1,11 @@
 # META DATA - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
      # Developer details: 
-        # Name: Harshita and Tanisha
+        # Name: Harshita Jangde
         # Role: Architects
     # Version:
-        # Version: V 1.0 (20 September 2024)
-            # Developers: Harshita and prachi
+        # Version: V 1.0 (19 October 2024)
+            # Developers: Harshita Jangde
             # Unit test: Pass
             # Integration test: Pass
      

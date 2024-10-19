@@ -1,16 +1,16 @@
 # META DATA - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
     # Developer details: 
-        # Name: Harshita, prachi, khushboo, tanisha
+        # Name: Harshita, Prachi, Khushboo and Tanisha
         # Role: Architects
     # Version:
-        # Version: V 1.0 (20 September 2024)
-            # Developers: Harshita, prachi, khushboo, tanisha
+        # Version: V 1.0 (19 October 2024)
+            # Developers: Harshita, Prachi, Khushboo and Tanisha
             # Unit test: Pass
             # Integration test: Pass
      
-     # Description: This code snippet creates a web app to train, evaluate, and predict if credit card is fraudulent according to Transaction behaviour using
-    # three different Outlier Detection models (Unsupervised Learning): IsolationForest, LocalOutlierFactor, One-Class SVM.
+     # Description: This code snippet creates a web app to train, evaluate, and classifiy twitter tweet sentiment and detect face mask using
+    # three different Deep Learning models (Transfer Learning): NN, NLP, abd CV.
 
 # CODE - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
@@ -24,18 +24,13 @@
 
 
 import streamlit as st  # Used for creating the web app
-import datetime  # Used for setting default value in streamlit form
 
-# Importing the .py helper files
 from ingest import ingest_data  # Importing the ingest_data function from ingest.py
 from preprocess import load_and_preprocess_data  # Importing the load_and_preprocess_data function from preprocess.py
 from split import split_data_and_store  # Importing the split_data function from split.py
 from nn3 import train_model as train_model_nn # Importing the train_model function from model_training.py
 from cv import train_yolov8_model as train_model_cv # Importing the train_model function from model_training.py
 from nlp import train_model as train_model_nlp 
-# from model_eval import evaluate_model  # Importing the evaluate_model function from model_eval.py
-from model_predict import predict_output  # Importing the predict_output function from model_predict.py
-# from db_utils import load_FaceMask_data_from_mongodb as load_data_from_mongodb
 
 
 # Setting the page configuration for the web app
@@ -65,23 +60,25 @@ if "tweet_data_path" not in st.session_state:
     st.session_state.tweet_data_path = "Data/TwitterData/twitter_data.csv"
     
 if "nn_model_path" not in st.session_state:
-    st.session_state.nn_model_path = "nn_model.pkl"
+    st.session_state.nn_model_path = "nn_model.pt"
     
 if "cv_model_path" not in st.session_state:
-    st.session_state.cv_model_path = "cv_model.pkl"
+    st.session_state.cv_model_path = "yolov8.pt"
     
 if "nlp_model_path" not in st.session_state:
-    st.session_state.nlp_model_path = "nlp_model.pkl"
+    st.session_state.nlp_model_path = "nlp_model.h5"
 
-
-
-
-
+#defining metrics here to store later    
 nn_test_accuracy, nn_test_prec, nn_test_recall = 0, 0, 0
 cv_test_accuracy,cv_test_prec,cv_test_recall =0,0,0
 nlp_test_accuracy, nlp_test_prec, nlp_test_recall, nlp_test_f1 = 0, 0, 0, 0
+
+
+
+
+
 # Creating tabs for the web app.
-tab1, tab2, tab3, tab4 = st.tabs(["Model Config","Model Training","Model Evaluation", "Model Prediction"])
+tab1, tab2, tab3 = st.tabs(["Model Config","Model Training","Model Evaluation"])
 
 # Tab for Model Config
 with tab1:
@@ -184,9 +181,9 @@ with tab3:
     st.markdown(markdown_top_center(nn_test_prec), unsafe_allow_html=True)
     st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
     st.markdown(markdown_top_center(nn_test_recall), unsafe_allow_html=True)
-    # st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
-    # st.markdown(markdown_top_center(nn_test_f1), unsafe_allow_html=True)  
     st.divider()
+    
+    
     
     # Displaying the metrics for the CV Model
     st.markdown("<h3 style='text-align: center; color: black;'>CV Model</h3>", unsafe_allow_html=True)
@@ -200,18 +197,14 @@ with tab3:
     st.markdown(markdown_top_center(cv_test_prec), unsafe_allow_html=True)
     st.markdown(markdown_top_center("Recall:"), unsafe_allow_html=True)
     st.markdown(markdown_top_center(cv_test_recall), unsafe_allow_html=True)
-    # st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
-    # st.markdown(markdown_top_center(cv_test_f1), unsafe_allow_html=True)
-        
-
     st.divider()
+    
+    
         
-    # # Displaying the metrics for the NLP Model
+    # Displaying the metrics for the NLP Model
     st.markdown("<h3 style='text-align: center; color: black;'>NLP Model</h3>", unsafe_allow_html=True)
     st.divider()
-    # # Display model metrics in three columns for NLP
-    # nlp_col1, nlp_col2, nlp_col3 = st.columns(3)
-        # Displaying metrics for test, validation, and super validation sets
+    # Displaying metrics for test, validation, and super validation sets
     st.markdown(markdown_top_center("Test Metrics:"), unsafe_allow_html=True)
     st.markdown(markdown_top_center(f"Accracy: {nlp_test_accuracy:.5f}"), unsafe_allow_html=True)
     st.write(" ")
@@ -221,38 +214,5 @@ with tab3:
     st.markdown(markdown_top_center(nlp_test_recall), unsafe_allow_html=True)
     st.markdown(markdown_top_center("F1 Score:"), unsafe_allow_html=True)
     st.markdown(markdown_top_center(nlp_test_f1), unsafe_allow_html=True)
-
-        
-    
     st.divider()
-
-      
-# Tab for Model Prediction
-with tab4:
-    
-    st.subheader("Model Prediction")
-    st.write("This is where you can predict.")
-    st.divider()
-
-    # Creating a form for user input
-    with st.form(key="PredictionForm"): 
-        
-        selected_model = st.selectbox(label="Select Model",
-                                      options=["NN", "CV", "NLP"])
-        
-        # Mapping model names to their respective paths
-        model_path_mapping = {
-            "NN": st.session_state.nn_model_path,
-            "CV": st.session_state.cv_model_path,
-            "NLP": st.session_state.nlp_model_path
-        }
-        # File uploader for image upload
-        uploaded_image = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"])
-        # Text area for tweet content input
-        tweet_content = st.text_area("Enter Tweet Content", height=150)
-        
-        # The form always needs a submit button to trigger the form submission
-        if st.form_submit_button(label="Predict", use_container_width=True):
-            user_input = [uploaded_image,tweet_content, model_path_mapping[selected_model]]
             
-            st.write(predict_output(*user_input))  # Calling the predict_output function with user input and displaying the output

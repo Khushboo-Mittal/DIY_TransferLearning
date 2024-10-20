@@ -45,6 +45,8 @@ def preprocess_mongo_data(data):
     # Encode categorical columns
     le = LabelEncoder() # Initialize the LabelEncoder
     data['sentiment'] = le.fit_transform(data['sentiment']) # Encode sentiment column
+    le = LabelEncoder() # Initialize the LabelEncoder
+    data['sentiment'] = le.fit_transform(data['sentiment']) # Encode sentiment column
     return data
 
     

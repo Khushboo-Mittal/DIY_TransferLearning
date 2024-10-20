@@ -4,14 +4,14 @@
         # Name: Harshita
         # Role: Architects
     # Version:
-        # Version: V 1.0 (20 September 2024)
+        # Version: V 1.0 (19 October 2024)
             # Developers: Harshita and Prachi
             # Unit test: Pass
             # Integration test: Pass
      
     # Description: This code snippet ingests transaction data from a CSV file, preprocesses it, and stores it in
-    # PostgreSQL database.
-        # PostgreSQL: Yes 
+    #MongoDB database.
+        # MongoDB: Yes 
 
 # CODE - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 

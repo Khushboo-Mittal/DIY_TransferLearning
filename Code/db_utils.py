@@ -1,17 +1,17 @@
 # META DATA - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
      # Developer details: 
-        # Name: Harshita
+        # Name: Harshita Jangde
         # Role: Architects
     # Version:
-        # Version: V 1.0 (20 September 2024)
-            # Developers: Harshita and Prachi
+        # Version: V 1.0 (19 October 2024)
+            # Developers: Harshita Jangde
             # Unit test: Pass
             # Integration test: Pass
      
-    # Description: This code snippet contains utility functions to connect to PostgreSQL database,
+    # Description: This code snippet contains utility functions to connect to MongoDB database,
     # create tables, and insert data into them.
-        # PostgreSQL: Yes
+        # MongoDB: Yes
 
 # CODE - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 

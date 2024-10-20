@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/HP/Desktop/DIY_TransferLearning/runs/mlflow/186571078292109144/71070bab76dd4e319b02e43024abd556/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '186571078292109144'
+lifecycle_stage: active
+run_id: 71070bab76dd4e319b02e43024abd556
+run_name: train9
+run_uuid: 71070bab76dd4e319b02e43024abd556
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1729337525409
+status: 1
+tags: []
+user_id: HP

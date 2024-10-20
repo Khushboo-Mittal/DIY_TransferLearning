@@ -1,37 +1,61 @@
+# Developer details: 
+        # Name: Prachi Tavse
+        # Role: Architects
+    # Version:
+        # Version: V 1.0 (19 October 2024)
+            # Developers: Prachi Tavse
+            # Unit test: Pass
+            # Integration test: Pass
+     
+    # Description: This code snippet creates the NLP Model to train, evaluate, and classify the 
+    # tweet sentiment whether if its positive, negative or neutral
+
+# CODE - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+    # Dependency: 
+        # Environment:     
+            # Python 3.11.5
+            # Streamlit 1.36.0
 import pandas as pd
 import numpy as np
-from transformers import BertTokenizer, BertForSequenceClassification, Trainer, TrainingArguments, TFBertForSequenceClassification
+from transformers import BertTokenizer, TFBertForSequenceClassification
 from datasets import Dataset
 import tensorflow as tf
 from pymongo import MongoClient
-from sklearn.metrics import classification_report, precision_score, recall_score, f1_score
-import pickle  # For loading data
+from sklearn.metrics import precision_score, recall_score, f1_score
 from db_utils import load_data_from_mongodb
 
 def save_model(model, model_path):
     # Open a file in write-binary mode to save the model
-    with open(model_path, "wb") as f:
-        # Serialize the model and save it to the file
-        pickle.dump(model, f)
+    model.save(model_path)
+
     
     
 def evaluate_model(model, X_test_encoded, y_test):
-    test_loss, test_accuracy = model.evaluate(
+    est_loss, test_accuracy = model.evaluate(
         [X_test_encoded['input_ids'], X_test_encoded['token_type_ids'], X_test_encoded['attention_mask']],
         y_test
     )
     
     # Get the predicted probabilities
-    y_pred_probs = model.predict([X_test_encoded['input_ids'], X_test_encoded['token_type_ids'], X_test_encoded['attention_mask']])
+    logits = model.predict([X_test_encoded['input_ids'], X_test_encoded['token_type_ids'], X_test_encoded['attention_mask']]).logits
+    
+    y_pred_probs = tf.nn.softmax(logits, axis=-1).numpy()
 
-    # Convert the probabilities to predicted classes (assuming a binary classification, adjust for multi-class if needed)
-    y_pred = np.argmax(y_pred_probs, axis=1)
+    # If it's binary classification, use a threshold of 0.5 on the positive class probability
+    if y_pred_probs.shape[1] == 2:
+        y_pred = (y_pred_probs[:, 1] > 0.5).astype(int)
+    else:
+        # For multi-class classification, take the argmax of the probabilities
+        y_pred = np.argmax(y_pred_probs, axis=1)
+        
+    y_test = np.array(y_test)
     
     precision = precision_score(y_test, y_pred, average='weighted')
     recall = recall_score(y_test, y_pred, average='weighted')
-    f1_score = f1_score(y_test, y_pred, average='weighted')
+    f1 = f1_score(y_test, y_pred, average='weighted')
     
-    return test_accuracy, precision, recall, f1_score, y_pred
+    return test_accuracy, precision, recall, f1,y_pred
 
 def train_model(mongodb_host, mongodb_port, mongodb_db, model_path):
 
@@ -95,13 +119,13 @@ def train_model(mongodb_host, mongodb_port, mongodb_db, model_path):
         y,
         validation_data=(
         [X_val_encoded['input_ids'], X_val_encoded['token_type_ids'], X_val_encoded['attention_mask']],y_val),
-        batch_size=32,
-        epochs=3
+        batch_size=16,
+        epochs=1
     )
     
-    test_accuracy, precision, recall, f1_score, pred = evaluate_model(model, X_test_encoded, y_test)
+    test_accuracy, precision, recall, f1, pred = evaluate_model(model, X_test_encoded, y_test)
     
     save_model(model, model_path)
     
-    return test_accuracy, precision, recall, f1_score, pred
+    return test_accuracy, precision, recall, f1
     

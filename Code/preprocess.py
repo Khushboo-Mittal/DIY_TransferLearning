@@ -1,17 +1,16 @@
 # META DATA - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
      # Developer details: 
-        # Name: Harshita and Prachi
+        # Name: Harshita 
         # Role: Architects
     # Version:
-        # Version: V 1.0 (20 September 2024)
-            # Developers: Harshita and Prachi
+        # Version: V 1.0 (19 October 2024)
+            # Developers: Harshita 
             # Unit test: Pass
             # Integration test: Pass
      
-    # Description: This code snippet preprocesses the data for a machine learning model by scaling
-    # numerical columns, encoding categorical columns, and extracting date components for before feeding it to train the model
-        # PostgreSQL: Yes
+    # Description: This code snippet preprocesses the data for a machine learning model before feeding it to train the model
+        # MongoDB: Yes
 
 # CODE - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
@@ -19,10 +18,8 @@
         # Environment:     
             # Python 3.11.5
             # Pandas 2.2.2
-            # Scikit-learn 1.5.0
-import numpy as np
+
 import pandas as pd     # Importing pandas for data manipulation
-from sqlalchemy import create_engine
 from sklearn.preprocessing import LabelEncoder  # Importing tools for data preprocessing
 import spacy
 from pymongo import MongoClient
@@ -48,6 +45,8 @@ def preprocess_mongo_data(data):
     # Encode categorical columns
     le = LabelEncoder() # Initialize the LabelEncoder
     data['sentiment'] = le.fit_transform(data['sentiment']) # Encode sentiment column
+    le = LabelEncoder() # Initialize the LabelEncoder
+    data['sentiment'] = le.fit_transform(data['sentiment']) # Encode sentiment column
     return data
 
     
@@ -61,8 +60,6 @@ def load_and_preprocess_data(mongodb_host, mongodb_port, mongodb_db):
     data = list(collection.find())
     df = pd.DataFrame(data)
 
-    # Drop the MongoDB ObjectId column (optional)
-    # df.drop(columns=["_id"], inplace=True)
     # If the collection exists and has data, skip preprocessing
     if new_collection.estimated_document_count() > 0:
         st.write(f"preprocessed_tweet_data already exists with data. Skipping preprocessing.")

@@ -1,0 +1,9 @@
+names:
+- with_mask
+- without_mask
+- mask_weared_incorrect
+nc: 3
+superval: /Users/HP/Desktop/DIY_TransferLearning/Data/superval/images
+test: /Users/HP/Desktop/DIY_TransferLearning/Data/test/images
+train: /Users/HP/Desktop/DIY_TransferLearning/Data/train/images
+val: /Users/HP/Desktop/DIY_TransferLearning/Data/val/images

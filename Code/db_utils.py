@@ -1,17 +1,17 @@
 # META DATA - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
      # Developer details: 
-        # Name: Harshita and Prachi
+        # Name: Harshita Jangde
         # Role: Architects
     # Version:
-        # Version: V 1.0 (20 September 2024)
-            # Developers: Harshita and Prachi
+        # Version: V 1.0 (19 October 2024)
+            # Developers: Harshita Jangde
             # Unit test: Pass
             # Integration test: Pass
      
-    # Description: This code snippet contains utility functions to connect to PostgreSQL database,
+    # Description: This code snippet contains utility functions to connect to MongoDB database,
     # create tables, and insert data into them.
-        # PostgreSQL: Yes
+        # MongoDB: Yes
 
 # CODE - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
@@ -22,6 +22,7 @@
 
 from pymongo import MongoClient
 import pandas as pd
+import pickle
 
 def connect_to_mongodb(host, port, db_name):
     # Function to connect to MongoDB using the provided configuration
@@ -39,10 +40,16 @@ def insert_data_to_mongodb(data, collection_name, db):
         data_dict = data.to_dict(orient='records')
         # Insert data into MongoDB collection
         collection.insert_many(data_dict)
-    
-    # If data is not a DataFrame, assume it's a list of image paths
-    elif isinstance(data, list):
-        # Insert each image path into the MongoDB collection
-        for image_path in data:
-            collection.insert_one({"image_path": image_path})
+        
+def load_data_from_mongodb(db, collection_name):
+    collection = db[collection_name]
+    data = collection.find_one()  # Retrieve the first document
+    # Check if data is empty
+    if not data:
+        print("No data found in the collection.")
+        return None
+    if data and 'data' in data:
+        return pickle.loads(data['data'])  # Deserialize the pickled binary data
+    return None
+            
 

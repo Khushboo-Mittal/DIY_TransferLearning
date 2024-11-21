@@ -23,7 +23,9 @@ The business operates in the digital marketing sector, aiming to understand cust
 
 ## Directory Structure
 **Code/:** Contains all the scripts for data ingestion, transformation, loading, evaluation, model training, inference, manual prediction, and web application.
+
 **Data/:** Contains the face mask data and twitter data. It also contains the data splitted during cv model training
+
 **runs/** Contains the result of cv model on face mask data
 
 ## Program Flow
@@ -36,5 +38,5 @@ The business operates in the digital marketing sector, aiming to understand cust
 8.	**Web Application:** This code snippet creates a web app using Streamlit to train, evaluate, and classify twitter sentiment or detect face mask using three different transfer learning models: NN, NLP and CV. [`app.py`]
 
 ## Steps to run
-1. Install the necessary packages: pip install -r requirements.txt
-2. Run the Streamlit web application: streamlit run Code/app.py
+1. Install the necessary packages: `pip install -r requirements.txt`
+2. Run the Streamlit web application: `streamlit run Code/app.py`

@@ -1,40 +1,69 @@
-# DIY - TRANSFER LEARNING
-This branch contains tranfer learning algorithms.
+# Transfer Learning 
 
-## Transfer Learning Algorithms
-### BERT (Bidirectional Encoder Representations from Transformers) - NLP
-BERT is a pre-trained transformer model that excels at understanding the context of words in text by considering both their left and right surroundings. In transfer learning, BERT can be fine-tuned for a variety of NLP tasks, including text classification, sentiment analysis, and named entity recognition. Its ability to handle large text corpora and provide contextualized word embeddings makes it highly effective for tasks where labeled data is limited. Fine-tuning BERT significantly reduces training time and improves model accuracy for specific language tasks.
-
-### YOLOv8 (You Only Look Once) - Computer Vision
-YOLOv8 is a high-performance object detection model that offers an excellent balance between detection speed and accuracy. It is particularly suited for real-time applications like traffic sign recognition, face mask detection, and autonomous driving. By leveraging transfer learning, YOLOv8 can be fine-tuned on specific image datasets, allowing the model to adapt pre-trained weights for detecting custom objects. This results in faster training, reduced computational cost, and improved accuracy, even when working with smaller image datasets.
-
-### FastRCNN - Neural Networks
-FastRCNN is a deep learning model designed for object detection tasks, integrating both region proposal generation and classification into a single, more efficient framework. By applying transfer learning, FastRCNN can be fine-tuned for specific use cases like anomaly detection in time-series data or specialized object detection tasks. This model leverages pre-trained features to quickly adapt to new domains, improving detection accuracy and reducing the time needed for training on custom data.
+This project leverages transfer learning techniques for two key tasks: **mask detection in public spaces** and **sentiment analysis of Twitter data**. It employs state-of-the-art models such as BERT for NLP and YOLOv8 for Computer Vision to make real-time predictions and analyze customer sentiment, aiding both public safety and digital marketing efforts.
 
 ## Problem Definition
-The business operates in public health and safety, focusing on enforcing mask-wearing in public spaces. The goal is to use Computer Vision and Neural Network models, to detect individuals with or without masks in real-time based on an image dataset. These models ensure compliance in areas such as airports and shopping malls, enhancing public safety.
 
-The business operates in the digital marketing sector, aiming to understand customer sentiment from social media platforms like Twitter. The goal is to use Natural Language Processing (NLP) for sentiment analysis of tweets, helping the company refine its marketing strategies and respond to consumer feedback in real time.
+### Public Health and Safety (Mask Detection)
+The business is focused on ensuring mask-wearing compliance in public spaces (e.g., airports and shopping malls). This solution uses **Computer Vision** models to detect individuals wearing masks or not, based on an image dataset.
 
-## Data Definition
-1. **The Twitter sentiment analysis dataset contains the following columns:** tweetID, entity, sentiment (positive, neutral, negative), and tweet_content. This dataset consists of 75,682 rows, providing a substantial amount of data for training sentiment analysis models. However, the diversity of sentiments across entities may still affect the accuracy and F1-score metrics. Ensuring a balanced representation of sentiments will enhance the model's ability to generalize and accurately classify customer opinions.
+### Digital Marketing (Sentiment Analysis)
+The business also focuses on **sentiment analysis** of customer feedback gathered from social media platforms, specifically **Twitter**. The aim is to refine marketing strategies based on real-time sentiment analysis of tweets, helping the business respond to consumer feedback effectively.
 
-2. **The face mask detection dataset includes images stored in one folder and corresponding annotations in XML files stored in another folder.** This dataset consists of 853 images, which is adequate for training mask detection models. However, the model's performance could still benefit from diverse lighting conditions and angles. Comprehensive annotations will help improve evaluation metrics like precision and recall, ensuring effective real-world mask detection.
+## Data Overview
+
+### 1. **Twitter Sentiment Analysis Dataset**
+- **Dataset Link to download:** https://www.kaggle.com/datasets/jp797498e/twitter-entity-sentiment-analysis/data
+- **Columns:** tweetID, entity, sentiment (positive, neutral, negative), tweet_content.
+- **Size:** 75,682 rows.
+- **Use Case:** The dataset is used for sentiment analysis, where the goal is to classify tweets as positive, neutral, or negative based on the content.
+- **Challenge:** The model needs to handle imbalanced sentiments across different entities for better generalization.
+
+### 2. **Face Mask Detection Dataset**
+- **Dataset Link:** https://www.kaggle.com/datasets/andrewmvd/face-mask-detection
+- **Data Type:** Images stored in one folder and corresponding annotations in XML files stored in another folder.
+- **Size:** 853 images.
+- **Use Case:** The dataset is used to detect whether individuals in images are wearing face masks or not.
+- **Challenge:** The model's accuracy can improve by including diverse lighting conditions and angles.
 
 ## Directory Structure
-**Code/:** Contains all the scripts for data ingestion, transformation, loading, evaluation, model training, inference, manual prediction, and web application.
-**Data/:** Contains the face mask data and twitter data. It also contains the data splitted during cv model training
-**runs/** Contains the result of cv model on face mask data
+
+- **Code:** Contains all scripts for data ingestion, transformation, model training, evaluation, and web application. - **Data:** Contains Twitter data, face mask data, and data split during training. 
+- **runs**: Stores the results of the - Computer Vision model on the face mask dataset.
 
 ## Program Flow
-1.	**db_utils:** This code snippet contains utility functions to connect to MongoDB database, create tables, and insert data into them.[`db_utils.py`]
-2.	**Data Ingestion:** This code snippet ingests twitter data from CSV file, preprocesses it, and stores it in MongoDB database. [`ingest.py`]
-3.	**Data Preprocessing:** This code snippet preprocesses input data for a machine learning model by scaling numerical columns, encoding categorical columns, and extracting date components for further analysis [`preprocess.py`]
-4.	**Data Splitting:** This code snippet contains functions to split preprocessed data into test, validation, and super validation and store it in a MongoDB database. [`split.py`]
-5.	**Model Training:** This is where NN, NLP and CV models, using the training data, are trained and stored in a MongoDB database. [`nn.py`, `nlp.py`, `cv.py`]
-7.	**Model Prediction:** This code snippet predict twitter sentiment or detect face mask based on user input data.  [`model_predict.py`]
-8.	**Web Application:** This code snippet creates a web app using Streamlit to train, evaluate, and classify twitter sentiment or detect face mask using three different transfer learning models: NN, NLP and CV. [`app.py`]
 
-## Steps to run
+1. **db_utils:** Utility functions for MongoDB database connection, table creation, and data insertion.  
+   [db_utils.py]
+
+2. **Data Ingestion:** Ingests Twitter data from a CSV file, preprocesses it, and stores it in MongoDB.  
+   [ingest.py]
+
+3. **Data Preprocessing:** Preprocesses the data by scaling numerical columns, encoding categorical columns, and extracting date components.  
+   [preprocess.py]
+
+4. **Data Splitting:** Splits preprocessed data into training, validation, and super validation sets, and stores them in MongoDB.  
+   [split.py]
+
+5. **Model Training:** Trains models for **Neural Networks (NN)**, **Natural Language Processing (NLP)**, and **Computer Vision (CV)** tasks, and stores them in MongoDB.  
+   [nn.py], [nlp.py], [cv.py]
+
+
+6. **Web Application:** A Streamlit web app to train, evaluate, and classify Twitter sentiment or detect face masks using three different transfer learning models.  
+   [app.py]
+
+## Transfer Learning Algorithms
+
+- **BERT (Bidirectional Encoder Representations from Transformers) - NLP**
+  - BERT is a pre-trained transformer model used for understanding the context of words in text. It excels in tasks like text classification, sentiment analysis, and named entity recognition. Fine-tuning BERT helps reduce training time and improve model accuracy when labeled data is limited.
+
+- **YOLOv8 (You Only Look Once) - Computer Vision**
+  - YOLOv8 is a high-performance object detection model known for its speed and accuracy. It is particularly suitable for real-time applications like traffic sign recognition and face mask detection. By applying transfer learning, YOLOv8 can be fine-tuned on specific datasets for custom object detection tasks.
+
+- **FastRCNN - Neural Networks**
+  - FastRCNN is a deep learning model designed for efficient object detection tasks. It integrates both region proposal generation and classification into a unified framework. Transfer learning with FastRCNN allows for quick adaptation to new domains, enhancing detection accuracy and reducing training time.
+
+## Steps to Run the Application
+
 1. Install the necessary packages: pip install -r requirements.txt
 2. Run the Streamlit web application: streamlit run Code/app.py

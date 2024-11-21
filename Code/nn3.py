@@ -14,7 +14,7 @@
 
     # Dependency: 
         # Environment:     
-            # Python 3.11.5
+            # Python 3.11.0
             # Streamlit 1.36.0
 
 import numpy as np

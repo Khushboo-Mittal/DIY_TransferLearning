@@ -2,6 +2,27 @@
 
 This project leverages transfer learning techniques for two key tasks: **mask detection in public spaces** and **sentiment analysis of Twitter data**. It employs state-of-the-art models such as BERT for NLP and YOLOv8 for Computer Vision to make real-time predictions and analyze customer sentiment, aiding both public safety and digital marketing efforts.
 
+## Table of Contents
+1. [Problem Definition]
+   - [Public Health and Safety (Mask Detection)]
+   - [Digital Marketing (Sentiment Analysis)]
+2. [Data Overview]
+   - [Twitter Sentiment Analysis Dataset]
+   - [Face Mask Detection Dataset]
+3. [Directory Structure]
+4. [Program Flow]
+   - [db_utils]
+   - [Data Ingestion]
+   - [Data Preprocessing]
+   - [Data Splitting]
+   - [Model Training]
+   - [Web Application]
+5. [Transfer Learning Algorithms]
+   - [BERT (NLP)]
+   - [YOLOv8 (CV)]
+   - [FastRCNN (Neural Networks)]
+6. [Steps to Run the Application]
+
 ## Problem Definition
 
 ### Public Health and Safety (Mask Detection)

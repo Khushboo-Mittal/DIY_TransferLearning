@@ -28,6 +28,43 @@ The business also focuses on **sentiment analysis** of customer feedback gathere
 
 ## Directory Structure
 
+•⁠  ⁠*Code:* Contains all scripts for data ingestion, transformation, model training, evaluation, and web application. - *Data:* Contains Twitter data, face mask data, and data split during training. 
+•⁠  ⁠*runs*: Stores the results of the - Computer Vision model on the face mask dataset.
 
 ## Program Flow
+
+1.⁠ ⁠*db_utils:* Utility functions for MongoDB database connection, table creation, and data insertion.  
+   [db_utils.py]
+
+2.⁠ ⁠*Data Ingestion:* Ingests Twitter data from a CSV file, preprocesses it, and stores it in MongoDB.  
+   [ingest.py]
+
+3.⁠ ⁠*Data Preprocessing:* Preprocesses the data by scaling numerical columns, encoding categorical columns, and extracting date components.  
+   [preprocess.py]
+
+4.⁠ ⁠*Data Splitting:* Splits preprocessed data into training, validation, and super validation sets, and stores them in MongoDB.  
+   [split.py]
+
+5.⁠ ⁠*Model Training:* Trains models for *Neural Networks (NN), **Natural Language Processing (NLP), and **Computer Vision (CV)* tasks, and stores them in MongoDB.  
+   [nn.py], [nlp.py], [cv.py]
+
+
+6.⁠ ⁠*Web Application:* A Streamlit web app to train, evaluate, and classify Twitter sentiment or detect face masks using three different transfer learning models.  
+   [app.py]
+
+## Transfer Learning Algorithms
+
+•⁠  ⁠*BERT (Bidirectional Encoder Representations from Transformers) - NLP*
+  - BERT is a pre-trained transformer model used for understanding the context of words in text. It excels in tasks like text classification, sentiment analysis, and named entity recognition. Fine-tuning BERT helps reduce training time and improve model accuracy when labeled data is limited.
+
+•⁠  ⁠*YOLOv8 (You Only Look Once) - Computer Vision*
+  - YOLOv8 is a high-performance object detection model known for its speed and accuracy. It is particularly suitable for real-time applications like traffic sign recognition and face mask detection. By applying transfer learning, YOLOv8 can be fine-tuned on specific datasets for custom object detection tasks.
+
+•⁠  ⁠*FastRCNN - Neural Networks*
+  - FastRCNN is a deep learning model designed for efficient object detection tasks. It integrates both region proposal generation and classification into a unified framework. Transfer learning with FastRCNN allows for quick adaptation to new domains, enhancing detection accuracy and reducing training time.
+
+## Steps to Run the Application
+
+1.⁠ ⁠Install the necessary packages: pip install -r requirements.txt
+2.⁠ ⁠Run the Streamlit web application: streamlit run Code/app.py
 

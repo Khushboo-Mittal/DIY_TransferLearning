@@ -27,7 +27,7 @@ from db_utils import load_data_from_mongodb
 
 def save_model(model, model_path):
     # Open a file in write-binary mode to save the model
-    model.save(model_path)
+    model.save(model_path,save_format='tf')
 
     
     

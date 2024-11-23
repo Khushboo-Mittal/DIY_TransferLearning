@@ -66,7 +66,7 @@ if "cv_model_path" not in st.session_state:
     st.session_state.cv_model_path = "yolov8.pt"
     
 if "nlp_model_path" not in st.session_state:
-    st.session_state.nlp_model_path = "nlp_model.h5"
+    st.session_state.nlp_model_path = "nlp_model"
 
 #defining metrics here to store later    
 nn_test_accuracy, nn_test_prec, nn_test_recall = 0, 0, 0

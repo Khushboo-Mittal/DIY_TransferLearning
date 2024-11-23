@@ -17,8 +17,8 @@
 
     # Dependency: 
         # Environment:
-            # Python 3.11.0  
-            # SQLAlchemy 2.0.31
+            # Python 3.10.8  
+            # SQLAlchemy 1.22.0
 
 from pymongo import MongoClient
 import pandas as pd

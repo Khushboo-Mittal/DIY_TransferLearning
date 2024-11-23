@@ -16,8 +16,8 @@
 
     # Dependency: 
         # Environment:     
-            # Python 3.11.0
-            # Pandas 2.2.2
+            # Python 3.10.8
+            # Pandas 2.0.3
 
 import pandas as pd     # Importing pandas for data manipulation
 from sklearn.preprocessing import LabelEncoder  # Importing tools for data preprocessing

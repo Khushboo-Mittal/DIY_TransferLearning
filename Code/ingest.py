@@ -17,8 +17,8 @@
 
     # Dependency: 
         # Environment:     
-            # Python 3.11.0
-            # Pandas 2.2.2
+            # Python 3.10.8
+            # Pandas 
 
 import pandas as pd # Importing pandas for data manipulation
 import csv

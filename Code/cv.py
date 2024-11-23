@@ -11,6 +11,13 @@
 # Description: This code snippet uses YoloV8 Model to train, evaluate, and predict whether 
 # a person is wearing a mask, not wearing a mask, or is wearing in an incorrect manner.
 
+# CODE - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+    # Dependency: 
+        # Environment:     
+            # Python 3.10.8
+            # Streamlit 1.22.0
+
 # Import necessary libraries
 import streamlit as st
 import os

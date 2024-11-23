@@ -17,7 +17,7 @@
     # Dependency: 
         # Environment:     
             # Python 3.10.8
-            # Streamlit 1.36.0
+            # Streamlit 1.22.0
             
             
 #to run: streamlit run Code/app.py

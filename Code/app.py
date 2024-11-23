@@ -16,7 +16,7 @@
 
     # Dependency: 
         # Environment:     
-            # Python 3.11.0
+            # Python 3.10.8
             # Streamlit 1.36.0
             
             

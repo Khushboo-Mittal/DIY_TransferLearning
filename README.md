@@ -48,8 +48,8 @@ The business also focuses on **sentiment analysis** of customer feedback gathere
 
 ## Directory Structure
 - ⁠*Code:* Contains all models in ipynb files.
-- *Data:* Contains Twitter data, face mask data, and data split during training. 
--⁠ ⁠*runs*: Stores the results of the - Computer Vision model on the face mask dataset.
+- *Data:* Contains Twitter data, face mask data, and data split during training.
+- ⁠*runs*: Stores the results of the - Computer Vision model on the face mask dataset.
 
 ## Program Flow
 

@@ -38,6 +38,7 @@ The business also focuses on **sentiment analysis** of customer feedback gathere
 - **Size:** 75,682 rows.
 - **Use Case:** The dataset is used for sentiment analysis, where the goal is to classify tweets as positive, neutral, or negative based on the content.
 - **Challenge:** The model needs to handle imbalanced sentiments across different entities for better generalization.
+- **Note:** This dataset is retreived from a gameplay review so the words like kill may be classified as positive it is because the dataset is labelled like that.
 
 ### 2. **Face Mask Detection Dataset**
 - **Dataset Link:** https://www.kaggle.com/datasets/andrewmvd/face-mask-detection

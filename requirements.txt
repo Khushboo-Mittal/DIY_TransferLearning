@@ -1,5 +1,4 @@
 # python==3.10.8
-streamlit==1.22.0
 numpy==1.25.0
 pandas==2.0.3
 torch==2.5.0

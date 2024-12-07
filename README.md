@@ -1,4 +1,4 @@
-# TRANSFER LEARNING
+# Transfer Learning
 
 This project leverages transfer learning techniques for two key tasks: **mask detection in public spaces** and **sentiment analysis of Twitter data**. It employs state-of-the-art models such as BERT for NLP to make real-time predictions and analyze customer sentiment, aiding both public safety and digital marketing efforts.
 This project also ensures mask-wearing compliance in public spaces using Computer Vision. It employs YOLOv8 for real-time mask detection and RCNN as an alternative for higher accuracy. The project showcases DIY Transfer Learning, adapting pre-trained models to detect masks with minimal data and resources.
